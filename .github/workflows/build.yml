@@ -17,7 +17,7 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew 
       - name: Apply Patches
-        run: ./gradlew applyPatches --stacktrace
+        run: ./gradlew applyAllPatches --stacktrace
       - name: Build Paperclip jar
         run: ./gradlew shadowjar createMojmapBundlerJar --stacktrace
       - name: Upload Paperclip jar
