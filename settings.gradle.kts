@@ -7,10 +7,48 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+}
+
+if (!file(".git").exists()) {
+    val errorText = """
+        
+        =====================[ ERROR ]=====================
+         The MultiPaper project directory is not a properly cloned Git repository.
+         
+         In order to build MultiPaper from source you must clone
+         the repository using Git, not download a code zip from GitHub.
+         
+         See https://github.com/MultiPaper/MultiPaper
+         for further information on building and modifying Purpur.
+        ===================================================
+    """.trimIndent()
+    error(errorText)
+}
+
 rootProject.name = "multipaper"
 
-for (name in listOf("MultiPaper-MasterMessagingProtocol", "MultiPaper-API", "MultiPaper-Server", "MultiPaper-Master")) {
-    val projName = name.toLowerCase(Locale.ENGLISH)
+for (name in listOf("multipaper-mastermessagingprotocol", "multipaper-api", "multipaper-server", "multipaper-master")) {
+    val projName = name.lowercase(Locale.ENGLISH)
     include(projName)
     findProject(":$projName")!!.projectDir = file(name)
+}
+
+optionalInclude("test-plugin")
+
+fun optionalInclude(name: String, op: (ProjectDescriptor.() -> Unit)? = null) {
+    val settingsFile = file("$name.settings.gradle.kts")
+    if (settingsFile.exists()) {
+        apply(from = settingsFile)
+        findProject(":$name")?.let { op?.invoke(it) }
+    } else {
+        settingsFile.writeText(
+            """
+            // Uncomment to enable the '$name' project
+            // include(":$name")
+
+            """.trimIndent()
+        )
+    }
 }
