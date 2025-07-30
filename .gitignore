@@ -50,7 +50,7 @@ manifest.mf
 # other stuff
 run/
 
-multipaper-api-api/build.gradle.kts
+multipaper-api/build.gradle.kts
 multipaper-server/build.gradle.kts
 multipaper-server/src/minecraft
 purpur-api
