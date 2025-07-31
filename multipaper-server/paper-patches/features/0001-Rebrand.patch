@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
-index a5a7334f7a1f147945079f20aa04b4f317d9e94c..f13266696cfd8eb1af2d5dd1ada0f4be89aaf1b4 100644
+index a5a7334f7a1f147945079f20aa04b4f317d9e94c..3d7b45cad86f9620521fd0fd3d01dae382479efd 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 @@ -36,7 +36,7 @@ public class PaperVersionFetcher implements VersionFetcher {
@@ -65,7 +65,7 @@ index a5a7334f7a1f147945079f20aa04b4f317d9e94c..f13266696cfd8eb1af2d5dd1ada0f4be
              }
          } catch (final IOException e) {
 diff --git a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
-index bc7e4e5560708fea89c584b1d8b471f4966f311a..cd548a2a63ad99c0d91eeb7bb4600efd50ae4da6 100644
+index bc7e4e5560708fea89c584b1d8b471f4966f311a..bb72e53613f5089b6ea025c41ac086abfb11c56c 100644
 --- a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
 +++ b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
 @@ -20,7 +20,7 @@ public final class PaperConsole extends SimpleTerminalConsole {
@@ -78,7 +78,7 @@ index bc7e4e5560708fea89c584b1d8b471f4966f311a..cd548a2a63ad99c0d91eeb7bb4600efd
                  .completer(new ConsoleCommandCompleter(this.server))
                  .option(LineReader.Option.COMPLETE_IN_WORD, true);
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-index 1b0ee48e28aaa68ddb1f28c23d3c5f5f40505c98..45a3f2576fd0cca58dfdeb75a2217674a8291ef8 100644
+index 1b0ee48e28aaa68ddb1f28c23d3c5f5f40505c98..6c5958d29cbb306a08aebc95802073e4a69f0d68 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 @@ -32,6 +32,7 @@ public record ServerBuildInfoImpl(
@@ -111,7 +111,7 @@ index 1b0ee48e28aaa68ddb1f28c23d3c5f5f40505c98..45a3f2576fd0cca58dfdeb75a2217674
  
      @Override
 diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
-index 2e7c3d4befeb6256ce81ecaa9ed4e8fbcb21651e..b141d13265063500d915f848697c2e8d3dd44d6e 100644
+index 2e7c3d4befeb6256ce81ecaa9ed4e8fbcb21651e..afb9943c1ccaefafecd006151ed0c64a742af72a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
 +++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
 @@ -491,7 +491,7 @@ public class CraftScheduler implements BukkitScheduler {
@@ -124,7 +124,7 @@ index 2e7c3d4befeb6256ce81ecaa9ed4e8fbcb21651e..b141d13265063500d915f848697c2e8d
                  // (async tasks must live with race-conditions if they attempt to cancel between these few lines of code)
              }
 diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
-index 99eb04643fce44c37fd96c99756837ccafe7b559..49111df856edb29cf351a4b71348a639c2da7239 100644
+index 99eb04643fce44c37fd96c99756837ccafe7b559..1946aae8d54fb4eacc661de33cc43feea342009c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
 +++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
 @@ -11,7 +11,7 @@ public final class Versioning {
@@ -137,7 +137,7 @@ index 99eb04643fce44c37fd96c99756837ccafe7b559..49111df856edb29cf351a4b71348a639
  
          if (stream != null) {
 diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
-index 39493810336442e74c0fc99fdeb5e073a8f4e95e..c8bc3ddbb4a2381d1a8355443e6b7d78031a179c 100644
+index 39493810336442e74c0fc99fdeb5e073a8f4e95e..cecae23917d4deabff83dddb74f138b974da36eb 100644
 --- a/src/main/java/org/spigotmc/WatchdogThread.java
 +++ b/src/main/java/org/spigotmc/WatchdogThread.java
 @@ -75,14 +75,14 @@ public class WatchdogThread extends ca.spottedleaf.moonrise.common.util.TickThre
