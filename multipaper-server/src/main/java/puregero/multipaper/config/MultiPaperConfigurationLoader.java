@@ -2,7 +2,6 @@ package puregero.multipaper.config;
 
 import io.papermc.paper.configuration.ConfigurationLoaders;
 import io.papermc.paper.configuration.ConfigurationPart;
-import io.papermc.paper.configuration.InnerClassFieldDiscoverer;
 import io.papermc.paper.configuration.constraint.Constraint;
 import io.papermc.paper.configuration.constraint.Constraints;
 import org.spongepowered.configurate.BasicConfigurationNode;
@@ -25,30 +24,30 @@ import static io.leangen.geantyref.GenericTypeReflector.erase;
 
 public class MultiPaperConfigurationLoader {
 
-    public static void init(File file) {
+    public static void init(final File file) {
         try {
-            YamlConfigurationLoader.Builder loaderBuilder = ConfigurationLoaders.naturallySorted();
+            final YamlConfigurationLoader.Builder loaderBuilder = ConfigurationLoaders.naturallySorted();
             loaderBuilder.defaultOptions(options -> options.header(MultiPaperConfiguration.HEADER));
 
-            Path configFile = file.toPath();
-            YamlConfigurationLoader loader = loaderBuilder
+            final Path configFile = file.toPath();
+            final YamlConfigurationLoader loader = loaderBuilder
                     .defaultOptions(applyObjectMapperFactory(createObjectMapper().build()))
                     .path(configFile)
                     .build();
-            ConfigurationNode node;
+            final ConfigurationNode node;
             if (Files.exists(configFile)) {
                 node = loader.load();
             } else {
                 node = CommentedConfigurationNode.root(loader.defaultOptions());
             }
 
-            String before = node.toString();
+            final String before = node.toString();
             setFromProperties(node);
 
-            MultiPaperConfiguration instance = node.require(MultiPaperConfiguration.class);
+            final MultiPaperConfiguration instance = node.require(MultiPaperConfiguration.class);
             transformLegacyConfig(node, instance);
 
-            for (Object key : node.childrenMap().keySet()) {
+            for (final Object key : node.childrenMap().keySet()) {
                 node.removeChild(key);
             }
 
@@ -59,23 +58,23 @@ public class MultiPaperConfigurationLoader {
             }
 
             MultiPaperConfiguration.set(instance);
-        } catch (ConfigurateException e) {
+        } catch (final ConfigurateException e) {
             throw new RuntimeException("Could not load multipaper.yml", e);
         }
     }
 
-    private static void setFromProperties(ConfigurationNode node) {
-        for (Map.Entry<Object, Object> property : System.getProperties().entrySet()) {
+    private static void setFromProperties(final ConfigurationNode node) {
+        for (final Map.Entry<Object, Object> property : System.getProperties().entrySet()) {
             if (property.getKey().toString().startsWith("multipaper.")) {
-                String key = property.getKey().toString().substring("multipaper.".length());
+                final String key = property.getKey().toString().substring("multipaper.".length());
                 try {
-                    String value = ((String) property.getValue());
+                    final String value = ((String) property.getValue());
                     if(value.contains(";")) {
                         node.node((Object[]) key.split("\\.")).set(value.split(";"));
                     } else {
                         node.node((Object[]) key.split("\\.")).set(value);
                     }
-                } catch (SerializationException e) {
+                } catch (final SerializationException e) {
                     e.printStackTrace();
                 }
             }
@@ -85,8 +84,7 @@ public class MultiPaperConfigurationLoader {
     private static ObjectMapper.Factory.Builder createObjectMapper() {
         return ObjectMapper.factoryBuilder()
                 .addConstraint(Constraint.class, new Constraint.Factory())
-                .addConstraint(Constraints.Min.class, Number.class, new Constraints.Min.Factory())
-                .addDiscoverer(new InnerClassFieldDiscoverer(Collections.emptyMap()));
+                .addConstraint(Constraints.Min.class, Number.class, new Constraints.Min.Factory());
     }
 
     private static UnaryOperator<ConfigurationOptions> applyObjectMapperFactory(final ObjectMapper.Factory factory) {
@@ -95,7 +93,7 @@ public class MultiPaperConfigurationLoader {
                 .registerAnnotatedObjects(factory));
     }
 
-    private static void transformLegacyConfig(ConfigurationNode node, MultiPaperConfiguration config) {
+    private static void transformLegacyConfig(final ConfigurationNode node, final MultiPaperConfiguration config) {
         getAndRemove(node, "bungeecordName", value -> config.masterConnection.myName = value.getString());
         getAndRemove(node, "multipaperMasterAddress", value -> config.masterConnection.masterAddress = value.getString());
         getAndRemove(node, "syncJsonFiles", value -> config.syncSettings.syncJsonFiles = value.getBoolean());
@@ -118,19 +116,19 @@ public class MultiPaperConfigurationLoader {
         getAndRemove(node, "optimizations.disableRedstoneSafetySync", value -> { /* removed */ });
     }
 
-    private static void getAndRemove(ConfigurationNode node, String key, ExceptionableConsumer<ConfigurationNode> consumer) {
+    private static void getAndRemove(ConfigurationNode node, final String key, final ExceptionableConsumer<ConfigurationNode> consumer) {
         if (System.getProperty(key) != null) {
             try {
-                BasicConfigurationNode systemNode = BasicConfigurationNode.root();
+                final BasicConfigurationNode systemNode = BasicConfigurationNode.root();
                 systemNode.set(System.getProperty(key));
                 consumer.accept(systemNode);
                 return;
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 e.printStackTrace();
             }
         }
 
-        String[] parts = key.split("\\.");
+        final String[] parts = key.split("\\.");
 
         for (int i = 0; i < parts.length; i++) {
             if (node.isMap() && node.childrenMap().containsKey(parts[i])) {
@@ -138,7 +136,7 @@ public class MultiPaperConfigurationLoader {
                     try {
                         consumer.accept(node.childrenMap().get(parts[i]));
                         node.removeChild(parts[i]);
-                    } catch (Exception e) {
+                    } catch (final Exception e) {
                         e.printStackTrace();
                     }
                 } else {

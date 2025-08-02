@@ -1,6 +1,6 @@
 package puregero.multipaper.commands;
 
-import io.papermc.paper.chunk.system.scheduling.NewChunkHolder;
+import ca.spottedleaf.moonrise.patches.chunk_system.scheduling.NewChunkHolder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.core.BlockPos;
@@ -25,16 +25,16 @@ public class MPDebugCommand extends Command implements Runnable {
     private final HashSet<Player> debugEnabled = new HashSet<>();
     private BukkitTask task = null;
 
-    public MPDebugCommand(String command) {
+    public MPDebugCommand(final String command) {
         super(command);
         setPermission("multipaper.command.mpdebug");
     }
 
     @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, String[] args) {
+    public boolean execute(@NotNull final CommandSender sender, @NotNull final String commandLabel, final String[] args) {
         if (!testPermission(sender)) return false;
 
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof final Player player)) {
             sender.sendMessage(ChatColor.RED + "Only players can execute this command.");
             return false;
         }
@@ -59,9 +59,9 @@ public class MPDebugCommand extends Command implements Runnable {
     public void run() {
         task = null;
 
-        Iterator<Player> iterator = debugEnabled.iterator();
+        final Iterator<Player> iterator = debugEnabled.iterator();
         while (iterator.hasNext()) {
-            Player player = iterator.next();
+            final Player player = iterator.next();
 
             if (!player.isOnline()) {
                 iterator.remove();
@@ -76,20 +76,20 @@ public class MPDebugCommand extends Command implements Runnable {
         }
     }
 
-    private void run(Player player) {
-        NewChunkHolder newChunkHolder = MultiPaper.getChunkHolder(((CraftPlayer) player).getHandle());
+    private void run(final Player player) {
+        final NewChunkHolder newChunkHolder = MultiPaper.getChunkHolder(((CraftPlayer) player).getHandle());
 
         if (newChunkHolder != null) {
-            ExternalServer owner = newChunkHolder.externalOwner;
+            final ExternalServer owner = newChunkHolder.externalOwner;
             player.sendActionBar(Component.text(owner == null ? "null" : owner.getName()).color(owner == null ? NamedTextColor.WHITE : (owner.isMe() ? NamedTextColor.AQUA : NamedTextColor.RED)));
         }
 
         for (double x = -2; x <= 2; x += 0.5) {
             for (double z = -2; z <= 2; z += 0.5) {
-                Vec3 vec = ((CraftPlayer) player).getHandle().position().add(x, 0.5, z);
-                BlockPos pos = new BlockPos((int) vec.x, (int) vec.y, (int) vec.z);
-                LevelChunk levelChunk = ((CraftWorld) player.getWorld()).getHandle().getChunkIfLoaded(pos);
-                Color color;
+                final Vec3 vec = ((CraftPlayer) player).getHandle().position().add(x, 0.5, z);
+                final BlockPos pos = new BlockPos((int) vec.x, (int) vec.y, (int) vec.z);
+                final LevelChunk levelChunk = ((CraftWorld) player.getWorld()).getHandle().getChunkIfLoaded(pos);
+                final Color color;
                 if (MultiPaper.isChunkExternal(levelChunk)) {
                     color = Color.RED;
                 } else if (MultiPaper.isChunkLocal(levelChunk)) {

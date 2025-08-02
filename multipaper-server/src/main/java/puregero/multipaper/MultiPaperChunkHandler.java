@@ -1,9 +1,9 @@
 package puregero.multipaper;
 
-import ca.spottedleaf.starlight.common.light.SWMRNibbleArray;
-import io.papermc.paper.chunk.system.scheduling.NewChunkHolder;
+import ca.spottedleaf.moonrise.patches.chunk_system.level.entity.ChunkEntitySlices;
+import ca.spottedleaf.moonrise.patches.chunk_system.scheduling.NewChunkHolder;
+import ca.spottedleaf.moonrise.patches.starlight.light.SWMRNibbleArray;
 import io.papermc.paper.util.MCUtil;
-import io.papermc.paper.world.ChunkEntitySlices;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -38,16 +38,16 @@ public class MultiPaperChunkHandler {
 
     private static final Logger LOGGER = LogManager.getLogger(MultiPaperChunkHandler.class.getSimpleName());
 
-    public static boolean shouldTick(Level level, BlockPos pos) {
-        LevelChunk chunk = level.getChunkIfLoaded(pos);
+    public static boolean shouldTick(final Level level, final BlockPos pos) {
+        final LevelChunk chunk = level.getChunkIfLoaded(pos);
         return MultiPaper.isChunkLocal(chunk);
     }
 
-    public static void onChunkLoad(LevelChunk chunk) {
+    public static void onChunkLoad(final LevelChunk chunk) {
 
     }
 
-    public static void onChunkUnload(NewChunkHolder newChunkHolder, @Nullable ChunkAccess chunk, @Nullable ChunkEntitySlices chunkEntitySlices) {
+    public static void onChunkUnload(final NewChunkHolder newChunkHolder, @Nullable final ChunkAccess chunk, @Nullable final ChunkEntitySlices chunkEntitySlices) {
         if (newChunkHolder.hasExternalLockRequest) {
             MultiPaper.unlockChunk(newChunkHolder, chunk, chunkEntitySlices);
         }
@@ -56,8 +56,8 @@ public class MultiPaperChunkHandler {
         );
     }
 
-    public static void onChunkUnsubscribed(String world, int cx, int cz) {
-        NewChunkHolder holder = MultiPaper.getChunkHolder(world, cx, cz);
+    public static void onChunkUnsubscribed(final String world, final int cx, final int cz) {
+        final NewChunkHolder holder = MultiPaper.getChunkHolder(world, cx, cz);
 
         if (holder != null && holder.getCurrentChunk() != null) {
             LOGGER.warn("Chunk " + world + "," + cx + "," + cz + " was unsubscribed from but has a chunk loaded! Resubscribing...");
@@ -66,12 +66,12 @@ public class MultiPaperChunkHandler {
     }
 
     private static final HashSet<BlockEntity> blockEntitiesToBroadcast = new HashSet<>();
-    public static void broadcastBlockEntityChange(BlockEntity entity) {
+    public static void broadcastBlockEntityChange(final BlockEntity entity) {
         if (blockUpdateChunk != null) return; // Don't broadcast the update to other servers if we're handling an update
         blockEntitiesToBroadcast.add(entity);
         // Wait a bit as the block entity may get changed multiple times in 1 tick
         MultiPaper.runSync(() -> {
-            for (BlockEntity blockEntity : blockEntitiesToBroadcast) {
+            for (final BlockEntity blockEntity : blockEntitiesToBroadcast) {
                 if (blockEntity != null && blockEntity.getLevel() != null) {
                     onBlockUpdate(MultiPaper.getChunkHolder(blockEntity.getLevel().getWorld().getName(), blockEntity.getBlockPos()), ClientboundBlockEntityDataPacket.create(blockEntity, BlockEntity::saveWithFullMetadata, false));
                 }
@@ -80,7 +80,7 @@ public class MultiPaperChunkHandler {
         });
     }
 
-    public static void onBlockUpdate(NewChunkHolder newChunkHolder, Packet<?> packet) {
+    public static void onBlockUpdate(final NewChunkHolder newChunkHolder, final Packet<?> packet) {
         if (newChunkHolder == null) {
             // Chunk is still loading
             return;
@@ -88,7 +88,7 @@ public class MultiPaperChunkHandler {
 
         ChunkAccess chunk = newChunkHolder.getCurrentChunk();
 
-        if (chunk instanceof ImposterProtoChunk imposterProtoChunk) {
+        if (chunk instanceof final ImposterProtoChunk imposterProtoChunk) {
             chunk = imposterProtoChunk.getWrapped();
         }
 
@@ -103,23 +103,23 @@ public class MultiPaperChunkHandler {
 
     public static ChunkAccess blockUpdateChunk = null;
     private static NewChunkHolder holder = null;
-    public static void handleBlockUpdate(UUID world, Packet<?> packet, int depth) {
+    public static void handleBlockUpdate(final UUID world, final Packet<?> packet, final int depth) {
         holder = null;
         blockUpdateChunk = null;
         ChunkAccess tempChunk = null;
-        CraftWorld bukkitWorld = ((CraftWorld) Bukkit.getWorld(world));
-        ServerLevel level = bukkitWorld != null ? bukkitWorld.getHandle() : null;
+        final CraftWorld bukkitWorld = ((CraftWorld) Bukkit.getWorld(world));
+        final ServerLevel level = bukkitWorld != null? bukkitWorld.getHandle() : null;
         if (level == null) {
             return;
-        } else if (packet instanceof ClientboundBlockUpdatePacket update) {
+        } else if (packet instanceof final ClientboundBlockUpdatePacket update) {
             holder = MultiPaper.getChunkHolder(world, update.getPos());
-        } else if (packet instanceof ClientboundSectionBlocksUpdatePacket update) {
+        } else if (packet instanceof final ClientboundSectionBlocksUpdatePacket update) {
             update.runUpdates((pos, state) -> {
                 if (holder == null) holder = MultiPaper.getChunkHolder(world, pos);
             });
-        } else if (packet instanceof ClientboundBlockEntityDataPacket update) {
+        } else if (packet instanceof final ClientboundBlockEntityDataPacket update) {
             holder = MultiPaper.getChunkHolder(world, update.getPos());
-        } else if (packet instanceof ClientboundLightUpdatePacket update) {
+        } else if (packet instanceof final ClientboundLightUpdatePacket update) {
             holder = MultiPaper.getChunkHolder(world, update.getX(), update.getZ());
         }
 
@@ -136,7 +136,7 @@ public class MultiPaperChunkHandler {
         if (holder != null) {
             tempChunk = holder.getCurrentChunk();
 
-            if (tempChunk instanceof ImposterProtoChunk imposterProtoChunk) {
+            if (tempChunk instanceof final ImposterProtoChunk imposterProtoChunk) {
                 tempChunk = imposterProtoChunk.getWrapped();
             }
         }
@@ -151,14 +151,14 @@ public class MultiPaperChunkHandler {
 
         if (holder != null && level.getChunkIfLoaded(holder.chunkX, holder.chunkZ) != null) {
             // Chunk is loaded
-            if (packet instanceof ClientboundBlockUpdatePacket update) {
+            if (packet instanceof final ClientboundBlockUpdatePacket update) {
                 setBlock(((LevelChunk) blockUpdateChunk), update.getPos(), update.getBlockState());
-            } else if (packet instanceof ClientboundSectionBlocksUpdatePacket update) {
+            } else if (packet instanceof final ClientboundSectionBlocksUpdatePacket update) {
                 update.runUpdates((pos, state) -> {
                     setBlock(((LevelChunk) blockUpdateChunk), pos, state);
                 });
-            } else if (packet instanceof ClientboundBlockEntityDataPacket update) {
-                BlockEntity existingBlockEntity = blockUpdateChunk.getBlockEntity(update.getPos());
+            } else if (packet instanceof final ClientboundBlockEntityDataPacket update) {
+                final BlockEntity existingBlockEntity = blockUpdateChunk.getBlockEntity(update.getPos());
                 if (existingBlockEntity != null && existingBlockEntity.minecraftKey.toString().equals(update.getTag().getString("id"))) {
                     existingBlockEntity.load(update.getTag());
                     holder.vanillaChunkHolder.blockChanged(update.getPos());
@@ -173,21 +173,21 @@ public class MultiPaperChunkHandler {
             }
         } else if (blockUpdateChunk != null) {
             // Chunk is not loaded
-            if (packet instanceof ClientboundBlockUpdatePacket update) {
+            if (packet instanceof final ClientboundBlockUpdatePacket update) {
                 setBlockInUnloadedChunk(blockUpdateChunk, update.getPos(), update.getBlockState());
-            } else if (packet instanceof ClientboundSectionBlocksUpdatePacket update) {
+            } else if (packet instanceof final ClientboundSectionBlocksUpdatePacket update) {
                 update.runUpdates((pos, state) -> {
                     setBlockInUnloadedChunk(blockUpdateChunk, pos, state);
                 });
-            } else if (packet instanceof ClientboundBlockEntityDataPacket update) {
+            } else if (packet instanceof final ClientboundBlockEntityDataPacket update) {
                 blockUpdateChunk.removeBlockEntity(update.getPos());
-                if (blockUpdateChunk instanceof LevelChunk levelChunk && levelChunk.blockEntitiesToLoad != null) {
+                if (blockUpdateChunk instanceof final LevelChunk levelChunk && levelChunk.blockEntitiesToLoad != null) {
                     levelChunk.blockEntitiesToLoad.add(update.getTag());
                 } else {
                     blockUpdateChunk.setBlockEntityNbt(update.getTag());
                     blockUpdateChunk.getBlockEntity(update.getPos());
                 }
-            } else if (packet instanceof ClientboundLightUpdatePacket update) {
+            } else if (packet instanceof final ClientboundLightUpdatePacket update) {
                 handleLightUpdatePacket(level, blockUpdateChunk, update);
             }
         }
@@ -199,16 +199,16 @@ public class MultiPaperChunkHandler {
         blockUpdateChunk = null;
     }
 
-    private static void setBlockInUnloadedChunk(ChunkAccess chunk, BlockPos pos, BlockState blockState) {
-        if (chunk instanceof LevelChunk levelChunk) {
+    private static void setBlockInUnloadedChunk(final ChunkAccess chunk, final BlockPos pos, final BlockState blockState) {
+        if (chunk instanceof final LevelChunk levelChunk) {
             levelChunk.setBlockState(pos, blockState, false, false);
         } else {
             chunk.setBlockState(pos, blockState, false);
         }
     }
 
-    private static void setBlock(LevelChunk chunk, BlockPos pos, BlockState blockState) {
-        BlockState oldState = chunk.setBlockState(pos, blockState, false, false);
+    private static void setBlock(final LevelChunk chunk, final BlockPos pos, final BlockState blockState) {
+        final BlockState oldState = chunk.setBlockState(pos, blockState, false, false);
         holder.vanillaChunkHolder.blockChanged(pos);
 
         if (oldState != null && blockState != oldState && (blockState.getLightBlock(chunk, pos) != oldState.getLightBlock(chunk, pos) || blockState.getLightEmission() != oldState.getLightEmission() || blockState.useShapeForLightOcclusion() || oldState.useShapeForLightOcclusion())) {
@@ -219,29 +219,29 @@ public class MultiPaperChunkHandler {
     }
 
     // From the client
-    private static void handleLightUpdatePacket(ServerLevel level, ChunkAccess chunk, ClientboundLightUpdatePacket packet) {
-        int i = packet.getX();
-        int j = packet.getZ();
-        LevelLightEngine levellightengine = level.getChunkSource().getLightEngine();
-        BitSet bitset = packet.getLightData().getSkyYMask();
-        BitSet bitset1 = packet.getLightData().getEmptySkyYMask();
-        Iterator<byte[]> iterator = packet.getLightData().getSkyUpdates().iterator();
+    private static void handleLightUpdatePacket(final ServerLevel level, final ChunkAccess chunk, final ClientboundLightUpdatePacket packet) {
+        final int i = packet.getX();
+        final int j = packet.getZ();
+        final LevelLightEngine levellightengine = level.getChunkSource().getLightEngine();
+        final BitSet bitset = packet.getLightData().getSkyYMask();
+        final BitSet bitset1 = packet.getLightData().getEmptySkyYMask();
+        final Iterator<byte[]> iterator = packet.getLightData().getSkyUpdates().iterator();
         readSectionList(chunk, i, j, levellightengine, LightLayer.SKY, bitset, bitset1, iterator);
-        BitSet bitset2 = packet.getLightData().getBlockYMask();
-        BitSet bitset3 = packet.getLightData().getEmptyBlockYMask();
-        Iterator<byte[]> iterator1 = packet.getLightData().getBlockUpdates().iterator();
+        final BitSet bitset2 = packet.getLightData().getBlockYMask();
+        final BitSet bitset3 = packet.getLightData().getEmptyBlockYMask();
+        final Iterator<byte[]> iterator1 = packet.getLightData().getBlockUpdates().iterator();
         readSectionList(chunk, i, j, levellightengine, LightLayer.BLOCK, bitset2, bitset3, iterator1);
     }
 
     // From the client
-    private static void readSectionList(ChunkAccess chunk, int i, int j, LevelLightEngine levelLightEngine, LightLayer lightLayer, BitSet bitset2, BitSet bitset3, Iterator<byte[]> iterator1) {
+    private static void readSectionList(final ChunkAccess chunk, final int i, final int j, final LevelLightEngine levelLightEngine, final LightLayer lightLayer, final BitSet bitset2, final BitSet bitset3, final Iterator<byte[]> iterator1) {
         for(int k = 0; k < levelLightEngine.getLightSectionCount(); ++k) {
-            int l = levelLightEngine.getMinLightSection() + k;
-            boolean flag = bitset2.get(k);
-            boolean flag1 = bitset3.get(k);
+            final int l = levelLightEngine.getMinLightSection() + k;
+            final boolean flag = bitset2.get(k);
+            final boolean flag1 = bitset3.get(k);
             if (flag || flag1) {
                 if (lightLayer == LightLayer.BLOCK) {
-                    chunk.getBlockNibbles()[k] = flag ? new SWMRNibbleArray(iterator1.next().clone()) : new SWMRNibbleArray();
+                    chunk.getBlockNibbles()[k] = flag? new SWMRNibbleArray(iterator1.next().clone()) : new SWMRNibbleArray();
                 } else if (lightLayer == LightLayer.SKY) {
                     chunk.getSkyNibbles()[k] = flag ? new SWMRNibbleArray(iterator1.next().clone()) : new SWMRNibbleArray();
                 }

@@ -1,6 +1,7 @@
 package puregero.multipaper.commands;
 
-import io.papermc.paper.world.ChunkEntitySlices;
+
+import ca.spottedleaf.moonrise.patches.chunk_system.level.entity.ChunkEntitySlices;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -14,16 +15,16 @@ public class EntitiesMapCommand extends MapCommandBase {
     private static final ChunkStatus EMPTY = new ChunkStatus(NamedTextColor.WHITE, "Empty (Loaded, but has no entities)");
     private static final ChunkStatus LOADED = new ChunkStatus(NamedTextColor.GREEN, "Loaded (Loaded, and has entities)");
 
-    public EntitiesMapCommand(String command) {
+    public EntitiesMapCommand(final String command) {
         super(command);
         setPermission("multipaper.command.entitiesmap");
     }
 
     @Override
-    protected ChunkStatus getStatus(Player player, ChunkPos chunkPos) {
-        ServerLevel level = ((CraftPlayer) player).getHandle().serverLevel();
+    protected ChunkStatus getStatus(final Player player, final ChunkPos chunkPos) {
+        final ServerLevel level = ((CraftPlayer) player).getHandle().serverLevel();
 
-        ChunkEntitySlices chunk = level.getEntityLookup().getChunk(chunkPos.x, chunkPos.z);
+        final ChunkEntitySlices chunk = level.getEntityLookup().getChunk(chunkPos.x, chunkPos.z);
 
         if (chunk == null) return UNLOADED;
 
