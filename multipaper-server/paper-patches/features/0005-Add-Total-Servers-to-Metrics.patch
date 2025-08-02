@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gizmo0320 <gizmo0320@unleveledgaming.com>
+Date: Fri, 1 Aug 2025 14:50:17 -0500
+Subject: [PATCH] Add Total Servers to Metrics
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/Metrics.java b/src/main/java/com/destroystokyo/paper/Metrics.java
+index e102225cdc9915e3eede0dae58cb3ccdecc73b78..58e4e3699a832d3b7d8b171dbbc0c4519b6779b8 100644
+--- a/src/main/java/com/destroystokyo/paper/Metrics.java
++++ b/src/main/java/com/destroystokyo/paper/Metrics.java
+@@ -9,6 +9,8 @@ import org.bukkit.plugin.Plugin;
+ 
+ import org.json.simple.JSONArray;
+ import org.json.simple.JSONObject;
++import puregero.multipaper.ExternalServer;
++import puregero.multipaper.MultiPaper;
+ 
+ import javax.net.ssl.HttpsURLConnection;
+ import java.io.ByteArrayOutputStream;
+@@ -606,6 +608,7 @@ public class Metrics {
+                 metrics.addCustomChart(new Metrics.SimplePie("online_mode", () -> Bukkit.getOnlineMode() ? "online" : (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode() ? "bungee" : "offline"))); // Purpur - Purpur config files
+                 metrics.addCustomChart(new Metrics.SimplePie("purpur_version", () -> (org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() != null) ? org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() : "unknown")); // Purpur - Purpur config files
+                 metrics.addCustomChart(new Metrics.SimplePie("multipaper_version", () -> (CraftServer.class.getPackage().getImplementationVersion() != null) ? CraftServer.class.getPackage().getImplementationVersion() : "unknown")); // MultiPaper - MultiPaper config files
++                metrics.addCustomChart(new Metrics.SimplePie("total_servers", () -> String.valueOf(MultiPaper.getConnection().getServersMap().values().stream().filter(ExternalServer::isAlive).count()))); // MultiPaper
+ 
+                 metrics.addCustomChart(new Metrics.DrilldownPie("java_version", () -> {
+                     final Map<String, Map<String, Integer>> map = new HashMap<>();

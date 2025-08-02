@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gizmo0320 <gizmo0320@unleveledgaming.com>
+Date: Fri, 1 Aug 2025 15:14:53 -0500
+Subject: [PATCH] Subscribe to worlds
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index fdef4addd86ca11dc98212897a6107f4a7a0eb0a..9262a8ba5aa23b40621ca7f60a1837fc86781fc7 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -270,6 +270,8 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
+ import org.yaml.snakeyaml.error.MarkedYAMLException;
+ 
+ import net.md_5.bungee.api.chat.BaseComponent;// Spigot
++import puregero.multipaper.MultiPaper;
++import puregero.multipaper.externalserverprotocol.SubscribeToWorldPacket;
+ import puregero.multipaper.permissions.MultiPaperPermissions;
+ 
+ public final class CraftServer implements Server {
+@@ -1518,6 +1520,7 @@ public final class CraftServer implements Server {
+             return;
+         }
+         this.worlds.put(world.getName().toLowerCase(Locale.ROOT), world);
++        MultiPaper.broadcastPacketToExternalServers(new SubscribeToWorldPacket(world.getName())); // MultiPaper
+     }
+ 
+     @Override

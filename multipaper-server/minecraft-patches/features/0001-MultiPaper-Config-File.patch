@@ -1,0 +1,363 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gizmo0320 <gizmo0320@unleveledgaming.com>
+Date: Fri, 1 Aug 2025 13:26:52 -0500
+Subject: [PATCH] MultiPaper Config File
+
+
+diff --git a/net/minecraft/server/Main.java b/net/minecraft/server/Main.java
+index b06c2c4aa77edafb374f7cf0406cf4d29c6e7f9f..b0f8dbb6d59a9615808894150a53e9ea3fa2e83e 100644
+--- a/net/minecraft/server/Main.java
++++ b/net/minecraft/server/Main.java
+@@ -16,6 +16,8 @@ import java.nio.file.Paths;
+ import java.util.Optional;
+ import java.util.function.BooleanSupplier;
+ import javax.annotation.Nullable;
++
++import jdk.internal.icu.text.UTF16;
+ import joptsimple.OptionParser;
+ import joptsimple.OptionSet;
+ import joptsimple.OptionSpec;
+@@ -60,6 +62,8 @@ import net.minecraft.world.level.storage.LevelSummary;
+ import net.minecraft.world.level.storage.PrimaryLevelData;
+ import net.minecraft.world.level.storage.WorldData;
+ import org.slf4j.Logger;
++import puregero.multipaper.config.MultiPaperConfiguration;
++import puregero.multipaper.config.MultiPaperConfigurationLoader;
+ 
+ public class Main {
+     private static final Logger LOGGER = LogUtils.getLogger();
+@@ -99,7 +103,7 @@ public class Main {
+             */ // CraftBukkit end
+         try {
+ 
+-            Path path = (Path) optionSet.valueOf("pidFile"); // CraftBukkit
++            final Path path = (Path) optionSet.valueOf("pidFile"); // CraftBukkit
+             if (path != null) {
+                 writePidFile(path);
+             }
+@@ -110,36 +114,39 @@ public class Main {
+             }
+ 
+             // Purpur start - Add toggle for enchant level clamping - load config files early
+-            org.bukkit.configuration.file.YamlConfiguration purpurConfiguration = io.papermc.paper.configuration.PaperConfigurations.loadLegacyConfigFile((File) optionSet.valueOf("purpur-settings"));
++            final org.bukkit.configuration.file.YamlConfiguration purpurConfiguration = io.papermc.paper.configuration.PaperConfigurations.loadLegacyConfigFile((File) optionSet.valueOf("purpur-settings"));
+             org.purpurmc.purpur.PurpurConfig.clampEnchantLevels = purpurConfiguration.getBoolean("settings.enchantment.clamp-levels", true);
+             org.purpurmc.purpur.PurpurConfig.registerMinecraftDebugCommands = purpurConfiguration.getBoolean("settings.register-minecraft-debug-commands"); // Purpur - register minecraft debug commands
+             org.purpurmc.purpur.PurpurConfig.registerMinecraftDisabledCommands = purpurConfiguration.getBoolean("settings.register-minecraft-disabled-commands"); // Purpur - register disabled minecraft commands
+             // Purpur end - Add toggle for enchant level clamping - load config files early
+ 
++            MultiPaperConfigurationLoader.init((File) optionSet.valueOf("multipaper-settings")); // MultiPaper
++            System.setProperty("multipaper.master-connection.my-name", MultiPaperConfiguration.get().masterConnection.myName); // MultiPaper - remember this property even after config reloads
++
+             io.papermc.paper.plugin.PluginInitializerManager.load(optionSet); // Paper
+             Bootstrap.bootStrap();
+             Bootstrap.validate();
+             Util.startTimerHackThread();
+-            Path path1 = Paths.get("server.properties");
+-            DedicatedServerSettings dedicatedServerSettings = new DedicatedServerSettings(optionSet); // CraftBukkit - CLI argument support
++            final Path path1 = Paths.get("server.properties");
++            final DedicatedServerSettings dedicatedServerSettings = new DedicatedServerSettings(optionSet); // CraftBukkit - CLI argument support
+             dedicatedServerSettings.forceSave();
+             RegionFileVersion.configure(dedicatedServerSettings.getProperties().regionFileComression);
+-            Path path2 = Paths.get("eula.txt");
+-            Eula eula = new Eula(path2);
++            final Path path2 = Paths.get("eula.txt");
++            final Eula eula = new Eula(path2);
+             // Paper start - load config files early for access below if needed
+-            org.bukkit.configuration.file.YamlConfiguration bukkitConfiguration = io.papermc.paper.configuration.PaperConfigurations.loadLegacyConfigFile((File) optionSet.valueOf("bukkit-settings"));
+-            org.bukkit.configuration.file.YamlConfiguration spigotConfiguration = io.papermc.paper.configuration.PaperConfigurations.loadLegacyConfigFile((File) optionSet.valueOf("spigot-settings"));
++            final org.bukkit.configuration.file.YamlConfiguration bukkitConfiguration = io.papermc.paper.configuration.PaperConfigurations.loadLegacyConfigFile((File) optionSet.valueOf("bukkit-settings"));
++            final org.bukkit.configuration.file.YamlConfiguration spigotConfiguration = io.papermc.paper.configuration.PaperConfigurations.loadLegacyConfigFile((File) optionSet.valueOf("spigot-settings"));
+             // Paper end - load config files early for access below if needed
+             if (optionSet.has("initSettings")) { // CraftBukkit
+                 // CraftBukkit start - SPIGOT-5761: Create bukkit.yml and commands.yml if not present
+-                File configFile = (File) optionSet.valueOf("bukkit-settings");
+-                org.bukkit.configuration.file.YamlConfiguration configuration = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(configFile);
++                final File configFile = (File) optionSet.valueOf("bukkit-settings");
++                final org.bukkit.configuration.file.YamlConfiguration configuration = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(configFile);
+                 configuration.options().copyDefaults(true);
+                 configuration.setDefaults(org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(Main.class.getClassLoader().getResourceAsStream("configurations/bukkit.yml"), java.nio.charset.StandardCharsets.UTF_8)));
+                 configuration.save(configFile);
+ 
+-                File commandFile = (File) optionSet.valueOf("commands-settings");
+-                org.bukkit.configuration.file.YamlConfiguration commandsConfiguration = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(commandFile);
++                final File commandFile = (File) optionSet.valueOf("commands-settings");
++                final org.bukkit.configuration.file.YamlConfiguration commandsConfiguration = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(commandFile);
+                 commandsConfiguration.options().copyDefaults(true);
+                 commandsConfiguration.setDefaults(org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(Main.class.getClassLoader().getResourceAsStream("configurations/commands.yml"), java.nio.charset.StandardCharsets.UTF_8)));
+                 commandsConfiguration.save(commandFile);
+@@ -149,7 +156,7 @@ public class Main {
+             }
+ 
+             // Spigot start
+-            boolean eulaAgreed = Boolean.getBoolean("com.mojang.eula.agree");
++            final boolean eulaAgreed = Boolean.getBoolean("com.mojang.eula.agree");
+             if (eulaAgreed) {
+                 LOGGER.error("You have used the Spigot command line EULA agreement flag.");
+                 LOGGER.error("By using this setting you are indicating your agreement to Mojang's EULA (https://aka.ms/MinecraftEULA).");
+@@ -162,7 +169,7 @@ public class Main {
+             }
+ 
+             // Paper start - Detect headless JRE
+-            String awtException = io.papermc.paper.util.ServerEnvironment.awtDependencyCheck();
++            final String awtException = io.papermc.paper.util.ServerEnvironment.awtDependencyCheck();
+             if (awtException != null) {
+                 LOGGER.error("You are using a headless JRE distribution.");
+                 LOGGER.error("This distribution is missing certain graphic libraries that the Minecraft server needs to function.");
+@@ -176,7 +183,7 @@ public class Main {
+             org.spigotmc.SpigotConfig.disabledAdvancements = spigotConfiguration.getStringList("advancements.disabled"); // Paper - fix SPIGOT-5885, must be set early in init
+ 
+             // Paper start - fix SPIGOT-5824
+-            File file;
++            final File file;
+             File userCacheFile = new File(Services.USERID_CACHE_FILE);
+             if (optionSet.has("universe")) {
+                 file = (File) optionSet.valueOf("universe"); // CraftBukkit
+@@ -185,11 +192,11 @@ public class Main {
+                 file = new File(bukkitConfiguration.getString("settings.world-container", "."));
+             }
+             // Paper end - fix SPIGOT-5824
+-            Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file, userCacheFile, optionSet); // Paper - pass OptionSet to load paper config files; override authentication service; fix world-container
++            final Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file, userCacheFile, optionSet); // Paper - pass OptionSet to load paper config files; override authentication service; fix world-container
+             // CraftBukkit start
+-            String string = Optional.ofNullable((String) optionSet.valueOf("world")).orElse(dedicatedServerSettings.getProperties().levelName);
+-            LevelStorageSource levelStorageSource = LevelStorageSource.createDefault(file.toPath());
+-            LevelStorageSource.LevelStorageAccess levelStorageAccess = levelStorageSource.validateAndCreateAccess(string, LevelStem.OVERWORLD);
++            final String string = Optional.ofNullable((String) optionSet.valueOf("world")).orElse(dedicatedServerSettings.getProperties().levelName);
++            final LevelStorageSource levelStorageSource = LevelStorageSource.createDefault(file.toPath());
++            final LevelStorageSource.LevelStorageAccess levelStorageAccess = levelStorageSource.validateAndCreateAccess(string, LevelStem.OVERWORLD);
+             // CraftBukkit end
+             Dynamic<?> dataTag;
+             if (levelStorageAccess.hasWorldData()) {
+@@ -197,15 +204,15 @@ public class Main {
+                 try {
+                     dataTag = levelStorageAccess.getDataTag();
+                     summary = levelStorageAccess.getSummary(dataTag);
+-                } catch (NbtException | ReportedNbtException | IOException var41) {
+-                    LevelStorageSource.LevelDirectory levelDirectory = levelStorageAccess.getLevelDirectory();
++                } catch (final NbtException | ReportedNbtException | IOException var41) {
++                    final LevelStorageSource.LevelDirectory levelDirectory = levelStorageAccess.getLevelDirectory();
+                     LOGGER.warn("Failed to load world data from {}", levelDirectory.dataFile(), var41);
+                     LOGGER.info("Attempting to use fallback");
+ 
+                     try {
+                         dataTag = levelStorageAccess.getDataTagFallback();
+                         summary = levelStorageAccess.getSummary(dataTag);
+-                    } catch (NbtException | ReportedNbtException | IOException var40) {
++                    } catch (final NbtException | ReportedNbtException | IOException var40) {
+                         LOGGER.error("Failed to load world data from {}", levelDirectory.oldDataFile(), var40);
+                         LOGGER.error(
+                             "Failed to load world data from {} and {}. World files may be corrupted. Shutting down.",
+@@ -231,19 +238,19 @@ public class Main {
+                 dataTag = null;
+             }
+ 
+-            Dynamic<?> dynamic = dataTag;
+-            boolean hasOptionSpec = optionSet.has("safeMode"); // CraftBukkit
++            final Dynamic<?> dynamic = dataTag;
++            final boolean hasOptionSpec = optionSet.has("safeMode"); // CraftBukkit
+             if (hasOptionSpec) {
+                 LOGGER.warn("Safe mode active, only vanilla datapack will be loaded");
+             }
+ 
+-            PackRepository packRepository = ServerPacksSource.createPackRepository(levelStorageAccess);
++            final PackRepository packRepository = ServerPacksSource.createPackRepository(levelStorageAccess);
+             // CraftBukkit start
+-            File bukkitDataPackFolder = new File(levelStorageAccess.getLevelPath(net.minecraft.world.level.storage.LevelResource.DATAPACK_DIR).toFile(), "bukkit");
++            final File bukkitDataPackFolder = new File(levelStorageAccess.getLevelPath(net.minecraft.world.level.storage.LevelResource.DATAPACK_DIR).toFile(), "bukkit");
+             if (!bukkitDataPackFolder.exists()) {
+                 bukkitDataPackFolder.mkdirs();
+             }
+-            File mcMeta = new File(bukkitDataPackFolder, "pack.mcmeta");
++            final File mcMeta = new File(bukkitDataPackFolder, "pack.mcmeta");
+             try {
+                 com.google.common.io.Files.asCharSink(mcMeta, java.nio.charset.StandardCharsets.UTF_8).write("""
+                     {
+@@ -254,39 +261,39 @@ public class Main {
+                     }
+                     """.formatted(SharedConstants.getCurrentVersion().packVersion(net.minecraft.server.packs.PackType.SERVER_DATA))
+                 );
+-            } catch (java.io.IOException ex) {
++            } catch (final java.io.IOException ex) {
+                 throw new RuntimeException("Could not initialize Bukkit datapack", ex);
+             }
+-            java.util.concurrent.atomic.AtomicReference<WorldLoader.DataLoadContext> worldLoader = new java.util.concurrent.atomic.AtomicReference<>();
++            final java.util.concurrent.atomic.AtomicReference<WorldLoader.DataLoadContext> worldLoader = new java.util.concurrent.atomic.AtomicReference<>();
+             // CraftBukkit end
+ 
+-            WorldStem worldStem;
++            final WorldStem worldStem;
+             try {
+-                WorldLoader.InitConfig initConfig = loadOrCreateConfig(dedicatedServerSettings.getProperties(), dynamic, hasOptionSpec, packRepository);
++                final WorldLoader.InitConfig initConfig = loadOrCreateConfig(dedicatedServerSettings.getProperties(), dynamic, hasOptionSpec, packRepository);
+                 worldStem = Util.<WorldStem>blockUntilDone(
+                         executor -> WorldLoader.load(
+                             initConfig,
+                             context -> {
+                                 worldLoader.set(context); // CraftBukkit
+-                                Registry<LevelStem> registry = context.datapackDimensions().lookupOrThrow(Registries.LEVEL_STEM);
++                                final Registry<LevelStem> registry = context.datapackDimensions().lookupOrThrow(Registries.LEVEL_STEM);
+                                 if (dynamic != null) {
+-                                    LevelDataAndDimensions levelDataAndDimensions = LevelStorageSource.getLevelDataAndDimensions(
++                                    final LevelDataAndDimensions levelDataAndDimensions = LevelStorageSource.getLevelDataAndDimensions(
+                                         dynamic, context.dataConfiguration(), registry, context.datapackWorldgen()
+-                                    );
++                                                                                                                                      );
+                                     return new WorldLoader.DataLoadOutput<>(
+                                         levelDataAndDimensions.worldData(), levelDataAndDimensions.dimensions().dimensionsRegistryAccess()
+                                     );
+                                 } else {
+                                     LOGGER.info("No existing world data, creating new world");
+-                                    LevelSettings levelSettings;
+-                                    WorldOptions worldOptions;
+-                                    WorldDimensions worldDimensions;
++                                    final LevelSettings levelSettings;
++                                    final WorldOptions worldOptions;
++                                    final WorldDimensions worldDimensions;
+                                     if (optionSet.has("demo")) { // CraftBukkit
+                                         levelSettings = MinecraftServer.DEMO_SETTINGS;
+                                         worldOptions = WorldOptions.DEMO_OPTIONS;
+                                         worldDimensions = WorldPresets.createNormalWorldDimensions(context.datapackWorldgen());
+                                     } else {
+-                                        DedicatedServerProperties properties = dedicatedServerSettings.getProperties();
++                                        final DedicatedServerProperties properties = dedicatedServerSettings.getProperties();
+                                         levelSettings = new LevelSettings(
+                                             properties.levelName,
+                                             properties.gamemode,
+@@ -300,8 +307,8 @@ public class Main {
+                                         worldDimensions = properties.createDimensions(context.datapackWorldgen());
+                                     }
+ 
+-                                    WorldDimensions.Complete complete = worldDimensions.bake(registry);
+-                                    Lifecycle lifecycle = complete.lifecycle().add(context.datapackWorldgen().allRegistriesLifecycle());
++                                    final WorldDimensions.Complete complete = worldDimensions.bake(registry);
++                                    final Lifecycle lifecycle = complete.lifecycle().add(context.datapackWorldgen().allRegistriesLifecycle());
+                                     return new WorldLoader.DataLoadOutput<>(
+                                         new PrimaryLevelData(levelSettings, worldOptions, complete.specialWorldProperty(), lifecycle),
+                                         complete.dimensionsRegistryAccess()
+@@ -314,7 +321,7 @@ public class Main {
+                         )
+                     )
+                     .get();
+-            } catch (Exception var39) {
++            } catch (final Exception var39) {
+                 LOGGER.warn(
+                     "Failed to load datapacks, can't proceed with server load. You can either fix your datapacks or reset to vanilla with --safeMode",
+                     (Throwable)var39
+@@ -335,7 +342,7 @@ public class Main {
+             Class.forName(net.minecraft.world.entity.npc.VillagerTrades.class.getName()); // Paper - load this sync so it won't fail later async
+             final DedicatedServer dedicatedServer = MinecraftServer.spin(
+                 thread1 -> {
+-                    DedicatedServer dedicatedServer1 = new DedicatedServer(
++                    final DedicatedServer dedicatedServer1 = new DedicatedServer(
+                         // CraftBukkit start
+                         optionSet,
+                         worldLoader.get(),
+@@ -360,13 +367,13 @@ public class Main {
+                     /*
+                     dedicatedServer1.setId(optionSet.valueOf(optionSpec12));
+                      */
+-                    boolean flag = !optionSet.has("nogui") && !optionSet.nonOptionArguments().contains("nogui");
++                    final boolean flag = !optionSet.has("nogui") && !optionSet.nonOptionArguments().contains("nogui");
+                     if (flag && !GraphicsEnvironment.isHeadless()) {
+                         dedicatedServer1.showGui();
+                     }
+                     // Paper start
+                     if (optionSet.has("port")) {
+-                        int port = (Integer) optionSet.valueOf("port");
++                        final int port = (Integer) optionSet.valueOf("port");
+                         if (port > 0) {
+                             dedicatedServer1.setPort(port);
+                         }
+@@ -387,27 +394,27 @@ public class Main {
+             thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
+             Runtime.getRuntime().addShutdownHook(thread);
+             */ // CraftBukkit end
+-        } catch (Exception var42) {
++        } catch (final Exception var42) {
+             LOGGER.error(LogUtils.FATAL_MARKER, "Failed to start the minecraft server", (Throwable)var42);
+         }
+     }
+ 
+-    private static void writePidFile(Path path) {
++    private static void writePidFile(final Path path) {
+         try {
+-            long l = ProcessHandle.current().pid();
++            final long l = ProcessHandle.current().pid();
+             Files.writeString(path, Long.toString(l));
+-        } catch (IOException var3) {
++        } catch (final IOException var3) {
+             throw new UncheckedIOException(var3);
+         }
+     }
+ 
+     private static WorldLoader.InitConfig loadOrCreateConfig(
+-        DedicatedServerProperties dedicatedServerProperties, @Nullable Dynamic<?> dynamic, boolean safeMode, PackRepository packRepository
++            final DedicatedServerProperties dedicatedServerProperties, @Nullable final Dynamic<?> dynamic, final boolean safeMode, final PackRepository packRepository
+     ) {
+-        boolean flag;
+-        WorldDataConfiguration worldDataConfiguration;
++        final boolean flag;
++        final WorldDataConfiguration worldDataConfiguration;
+         if (dynamic != null) {
+-            WorldDataConfiguration dataConfig = LevelStorageSource.readDataConfig(dynamic);
++            final WorldDataConfiguration dataConfig = LevelStorageSource.readDataConfig(dynamic);
+             flag = false;
+             worldDataConfiguration = dataConfig;
+         } else {
+@@ -415,34 +422,34 @@ public class Main {
+             worldDataConfiguration = new WorldDataConfiguration(dedicatedServerProperties.initialDataPackConfiguration, FeatureFlags.DEFAULT_FLAGS);
+         }
+ 
+-        WorldLoader.PackConfig packConfig = new WorldLoader.PackConfig(packRepository, worldDataConfiguration, safeMode, flag);
++        final WorldLoader.PackConfig packConfig = new WorldLoader.PackConfig(packRepository, worldDataConfiguration, safeMode, flag);
+         return new WorldLoader.InitConfig(packConfig, Commands.CommandSelection.DEDICATED, dedicatedServerProperties.functionPermissionLevel);
+     }
+ 
+     public static void forceUpgrade(
+-        LevelStorageSource.LevelStorageAccess levelStorage,
+-        WorldData worldData,
+-        DataFixer dataFixer,
+-        boolean eraseCache,
+-        BooleanSupplier running,
+-        RegistryAccess registryAccess,
+-        boolean recreateRegionFiles
++            final LevelStorageSource.LevelStorageAccess levelStorage,
++            final WorldData worldData,
++            final DataFixer dataFixer,
++            final boolean eraseCache,
++            final BooleanSupplier running,
++            final RegistryAccess registryAccess,
++            final boolean recreateRegionFiles
+     ) {
+         LOGGER.info("Forcing world upgrade! {}", levelStorage.getLevelId()); // CraftBukkit
+ 
+-        try (WorldUpgrader worldUpgrader = new WorldUpgrader(levelStorage, dataFixer, worldData, registryAccess, eraseCache, recreateRegionFiles)) {
++        try (final WorldUpgrader worldUpgrader = new WorldUpgrader(levelStorage, dataFixer, worldData, registryAccess, eraseCache, recreateRegionFiles)) {
+             Component component = null;
+ 
+             while (!worldUpgrader.isFinished()) {
+-                Component status = worldUpgrader.getStatus();
++                final Component status = worldUpgrader.getStatus();
+                 if (component != status) {
+                     component = status;
+                     LOGGER.info(worldUpgrader.getStatus().getString());
+                 }
+ 
+-                int totalChunks = worldUpgrader.getTotalChunks();
++                final int totalChunks = worldUpgrader.getTotalChunks();
+                 if (totalChunks > 0) {
+-                    int i = worldUpgrader.getConverted() + worldUpgrader.getSkipped();
++                    final int i = worldUpgrader.getConverted() + worldUpgrader.getSkipped();
+                     LOGGER.info("{}% completed ({} / {} chunks)...", Mth.floor((float)i / totalChunks * 100.0F), i, totalChunks);
+                 }
+ 
+@@ -451,7 +458,7 @@ public class Main {
+                 } else {
+                     try {
+                         Thread.sleep(1000L);
+-                    } catch (InterruptedException var13) {
++                    } catch (final InterruptedException var13) {
+                     }
+                 }
+             }

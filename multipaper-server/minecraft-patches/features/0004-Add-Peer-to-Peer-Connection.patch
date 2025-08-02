@@ -1,0 +1,755 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gizmo0320 <gizmo0320@unleveledgaming.com>
+Date: Fri, 1 Aug 2025 14:47:52 -0500
+Subject: [PATCH] Add Peer to Peer Connection
+
+
+diff --git a/net/minecraft/server/dedicated/DedicatedServer.java b/net/minecraft/server/dedicated/DedicatedServer.java
+index 670553243d26e2faab8a21f099a846d4d1df7927..a4085c24dfedc8bfeacb11d0a3b255b3d6531422 100644
+--- a/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -58,6 +58,7 @@ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.entity.SkullBlockEntity;
+ import net.minecraft.world.level.storage.LevelStorageSource;
+ import org.slf4j.Logger;
++import puregero.multipaper.MultiPaper;
+ 
+ public class DedicatedServer extends MinecraftServer implements ServerInterface {
+     static final Logger LOGGER = LogUtils.getLogger();
+@@ -81,15 +82,15 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     public ServerLinks serverLinks;
+ 
+     public DedicatedServer(
+-        joptsimple.OptionSet options, net.minecraft.server.WorldLoader.DataLoadContext worldLoader, // CraftBukkit - Signature changed
+-        Thread serverThread,
+-        LevelStorageSource.LevelStorageAccess storageSource,
+-        PackRepository packRepository,
+-        WorldStem worldStem,
+-        DedicatedServerSettings settings,
+-        DataFixer fixerUpper,
+-        Services services,
+-        ChunkProgressListenerFactory progressListenerFactory
++            final joptsimple.OptionSet options, final net.minecraft.server.WorldLoader.DataLoadContext worldLoader, // CraftBukkit - Signature changed
++            final Thread serverThread,
++            final LevelStorageSource.LevelStorageAccess storageSource,
++            final PackRepository packRepository,
++            final WorldStem worldStem,
++            final DedicatedServerSettings settings,
++            final DataFixer fixerUpper,
++            final Services services,
++            final ChunkProgressListenerFactory progressListenerFactory
+     ) {
+         super(options, worldLoader, serverThread, storageSource, packRepository, worldStem, Proxy.NO_PROXY, fixerUpper, services, progressListenerFactory); // CraftBukkit - Signature changed
+         this.settings = settings;
+@@ -100,7 +101,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+ 
+     @Override
+     public boolean initServer() throws IOException {
+-        Thread thread = new Thread("Server console handler") {
++        final Thread thread = new Thread("Server console handler") {
+             @Override
+             public void run() {
+                 if (!org.bukkit.craftbukkit.Main.useConsole) return; // CraftBukkit
+@@ -122,9 +123,9 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             }
+         };
+         // CraftBukkit start - TODO: handle command-line logging arguments
+-        java.util.logging.Logger global = java.util.logging.Logger.getLogger("");
++        final java.util.logging.Logger global = java.util.logging.Logger.getLogger("");
+         global.setUseParentHandlers(false);
+-        for (java.util.logging.Handler handler : global.getHandlers()) {
++        for (final java.util.logging.Handler handler : global.getHandlers()) {
+             global.removeHandler(handler);
+         }
+         global.addHandler(new org.bukkit.craftbukkit.util.ForwardLogHandler());
+@@ -153,7 +154,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         // Paper end - detect running as root
+ 
+         LOGGER.info("Loading properties");
+-        DedicatedServerProperties properties = this.settings.getProperties();
++        final DedicatedServerProperties properties = this.settings.getProperties();
+         if (this.isSingleplayer()) {
+             this.setLocalIp("127.0.0.1");
+         } else {
+@@ -187,7 +188,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         // Purpur start - Purpur config files
+         try {
+             org.purpurmc.purpur.PurpurConfig.init((java.io.File) options.valueOf("purpur-settings"));
+-        } catch (Exception e) {
++        } catch (final Exception e) {
+             DedicatedServer.LOGGER.error("Unable to load server configuration", e);
+             return false;
+         }
+@@ -203,7 +204,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         // this.worldData.setGameType(properties.gamemode); // CraftBukkit - moved to world loading
+         LOGGER.info("Default game type: {}", properties.gamemode);
+         // Paper start - Unix domain socket support
+-        java.net.SocketAddress bindAddress;
++        final java.net.SocketAddress bindAddress;
+         if (this.getLocalIp().startsWith("unix:")) {
+             if (!io.netty.channel.epoll.Epoll.isAvailable()) {
+                 LOGGER.error("**** INVALID CONFIGURATION!");
+@@ -233,7 +234,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+ 
+         try {
+             this.getConnection().startTcpServerListener(bindAddress); // Paper - Unix domain socket support
+-        } catch (IOException var10) {
++        } catch (final IOException var10) {
+             LOGGER.warn("**** FAILED TO BIND TO PORT!");
+             LOGGER.warn("The exception was: {}", var10.toString());
+             LOGGER.warn("Perhaps a server is already running on that port?");
+@@ -266,14 +267,16 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         // Purpur end - UPnP Port Forwarding
+ 
+         // CraftBukkit start
++
++        MultiPaper.onStart(bindAddress); // Multipaper - call onStart
+         this.server.loadPlugins();
+         this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.STARTUP);
+         // CraftBukkit end
+ 
+         // Paper start - Add Velocity IP Forwarding Support
+-        boolean usingProxy = org.spigotmc.SpigotConfig.bungee || io.papermc.paper.configuration.GlobalConfiguration.get().proxies.velocity.enabled;
+-        String proxyFlavor = (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.velocity.enabled) ? "Velocity" : "BungeeCord";
+-        String proxyLink = (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.velocity.enabled) ? "https://docs.papermc.io/velocity/security" : "http://www.spigotmc.org/wiki/firewall-guide/";
++        final boolean usingProxy = org.spigotmc.SpigotConfig.bungee || io.papermc.paper.configuration.GlobalConfiguration.get().proxies.velocity.enabled;
++        final String proxyFlavor = (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.velocity.enabled)? "Velocity" : "BungeeCord";
++        final String proxyLink = (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.velocity.enabled)? "https://docs.papermc.io/velocity/security" : "http://www.spigotmc.org/wiki/firewall-guide/";
+         // Paper end - Add Velocity IP Forwarding Support
+         if (!this.usesAuthentication()) {
+             LOGGER.warn("**** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!");
+@@ -307,13 +310,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             this.tickTimeLogger = new RemoteSampleLogger(
+                 TpsDebugDimensions.values().length, this.debugSampleSubscriptionTracker, RemoteDebugSampleType.TICK_TIME
+             );
+-            long nanos = Util.getNanos();
++            final long nanos = Util.getNanos();
+             SkullBlockEntity.setup(this.services, this);
+             GameProfileCache.setUsesAuthentication(this.usesAuthentication());
+             LOGGER.info("Preparing level \"{}\"", this.getLevelIdName());
+             this.loadLevel(this.storageSource.getLevelId()); // CraftBukkit
+-            long l = Util.getNanos() - nanos;
+-            String string = String.format(Locale.ROOT, "%.3fs", l / 1.0E9);
++            final long l = Util.getNanos() - nanos;
++            final String string = String.format(Locale.ROOT, "%.3fs", l / 1.0E9);
+             LOGGER.info("Done preparing level \"{}\" ({})", this.getLevelIdName(), string); // Paper - Improve startup message, add total time
+             if (properties.announcePlayerAchievements != null) {
+                 this.getGameRules().getRule(GameRules.RULE_ANNOUNCE_ADVANCEMENTS).set(properties.announcePlayerAchievements, this.overworld()); // CraftBukkit - per-world
+@@ -330,7 +333,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             }
+ 
+             if (false && this.getMaxTickLength() > 0L) { // Spigot - disable
+-                Thread thread1 = new Thread(new ServerWatchdog(this));
++                final Thread thread1 = new Thread(new ServerWatchdog(this));
+                 thread1.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandlerWithName(LOGGER));
+                 thread1.setName("Server Watchdog");
+                 thread1.setDaemon(true);
+@@ -370,17 +373,17 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public SystemReport fillServerSystemReport(SystemReport report) {
++    public SystemReport fillServerSystemReport(final SystemReport report) {
+         report.setDetail("Is Modded", () -> this.getModdedStatus().fullDescription());
+         report.setDetail("Type", () -> "Dedicated Server (map_server.txt)");
+         return report;
+     }
+ 
+     @Override
+-    public void dumpServerProperties(Path path) throws IOException {
+-        DedicatedServerProperties properties = this.getProperties();
++    public void dumpServerProperties(final Path path) throws IOException {
++        final DedicatedServerProperties properties = this.getProperties();
+ 
+-        try (Writer bufferedWriter = Files.newBufferedWriter(path)) {
++        try (final Writer bufferedWriter = Files.newBufferedWriter(path)) {
+             bufferedWriter.write(String.format(Locale.ROOT, "sync-chunk-writes=%s%n", properties.syncChunkWrites));
+             bufferedWriter.write(String.format(Locale.ROOT, "gamemode=%s%n", properties.gamemode));
+             bufferedWriter.write(String.format(Locale.ROOT, "spawn-monsters=%s%n", properties.spawnMonsters));
+@@ -423,31 +426,31 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public boolean isLevelEnabled(Level level) {
++    public boolean isLevelEnabled(final Level level) {
+         return level.dimension() != Level.NETHER || this.getProperties().allowNether;
+     }
+ 
+     private static final java.util.concurrent.atomic.AtomicInteger ASYNC_DEBUG_CHUNKS_COUNT = new java.util.concurrent.atomic.AtomicInteger(); // Paper - rewrite chunk system
+ 
+-    public void handleConsoleInput(String msg, CommandSourceStack source) {
++    public void handleConsoleInput(final String msg, final CommandSourceStack source) {
+         // Paper start - rewrite chunk system
+         if (msg.equalsIgnoreCase("paper debug chunks --async")) {
+             LOGGER.info("Scheduling async debug chunks");
+-            Runnable run = () -> {
++            final Runnable run = () -> {
+                 LOGGER.info("Async debug chunks executing");
+                 ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkTaskScheduler.dumpAllChunkLoadInfo(this, false);
+-                org.bukkit.command.CommandSender sender = MinecraftServer.getServer().console;
+-                java.io.File file = ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkTaskScheduler.getChunkDebugFile();
++                final org.bukkit.command.CommandSender sender = MinecraftServer.getServer().console;
++                final java.io.File file = ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkTaskScheduler.getChunkDebugFile();
+                 sender.sendMessage(net.kyori.adventure.text.Component.text("Writing chunk information dump to " + file, net.kyori.adventure.text.format.NamedTextColor.GREEN));
+                 try {
+                     ca.spottedleaf.moonrise.common.util.JsonUtil.writeJson(ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkTaskScheduler.debugAllWorlds(this), file);
+                     sender.sendMessage(net.kyori.adventure.text.Component.text("Successfully written chunk information!", net.kyori.adventure.text.format.NamedTextColor.GREEN));
+-                } catch (Throwable thr) {
++                } catch (final Throwable thr) {
+                     MinecraftServer.LOGGER.warn("Failed to dump chunk information to file " + file.toString(), thr);
+                     sender.sendMessage(net.kyori.adventure.text.Component.text("Failed to dump chunk information, see console", net.kyori.adventure.text.format.NamedTextColor.RED));
+                 }
+             };
+-            Thread t = new Thread(run);
++            final Thread t = new Thread(run);
+             t.setName("Async debug thread #" + ASYNC_DEBUG_CHUNKS_COUNT.getAndIncrement());
+             t.setDaemon(true);
+             t.start();
+@@ -463,7 +466,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         while ((consoleInput = this.serverCommandQueue.poll()) != null) {
+             // Paper end - Perf: use proper queue
+             // CraftBukkit start - ServerCommand for preprocessing
+-            org.bukkit.event.server.ServerCommandEvent event = new org.bukkit.event.server.ServerCommandEvent(this.console, consoleInput.msg);
++            final org.bukkit.event.server.ServerCommandEvent event = new org.bukkit.event.server.ServerCommandEvent(this.console, consoleInput.msg);
+             this.server.getPluginManager().callEvent(event);
+             if (event.isCancelled()) continue;
+             consoleInput = new ConsoleInput(event.getCommand(), consoleInput.source);
+@@ -534,7 +537,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public boolean isUnderSpawnProtection(ServerLevel level, BlockPos pos, Player player) {
++    public boolean isUnderSpawnProtection(final ServerLevel level, final BlockPos pos, final Player player) {
+         if (level.dimension() != Level.OVERWORLD) {
+             return false;
+         } else if (this.getPlayerList().getOps().isEmpty()) {
+@@ -544,10 +547,10 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         } else if (this.getSpawnProtectionRadius() <= 0) {
+             return false;
+         } else {
+-            BlockPos sharedSpawnPos = level.getSharedSpawnPos();
+-            int abs = Mth.abs(pos.getX() - sharedSpawnPos.getX());
+-            int abs1 = Mth.abs(pos.getZ() - sharedSpawnPos.getZ());
+-            int max = Math.max(abs, abs1);
++            final BlockPos sharedSpawnPos = level.getSharedSpawnPos();
++            final int abs = Mth.abs(pos.getX() - sharedSpawnPos.getX());
++            final int abs1 = Mth.abs(pos.getZ() - sharedSpawnPos.getZ());
++            final int max = Math.max(abs, abs1);
+             return max <= this.getSpawnProtectionRadius();
+         }
+     }
+@@ -573,7 +576,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public void setPlayerIdleTimeout(int idleTimeout) {
++    public void setPlayerIdleTimeout(final int idleTimeout) {
+         super.setPlayerIdleTimeout(idleTimeout);
+         this.settings.update(dedicatedServerProperties -> dedicatedServerProperties.playerIdleTimeout.update(this.registryAccess(), idleTimeout));
+     }
+@@ -600,7 +603,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+ 
+     @Override
+     public boolean enforceSecureProfile() {
+-        DedicatedServerProperties properties = this.getProperties();
++        final DedicatedServerProperties properties = this.getProperties();
+         // Paper start - Add setting for proxy online mode status
+         return properties.enforceSecureProfile
+             && io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode()
+@@ -675,7 +678,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     private void waitForRetry() {
+         try {
+             Thread.sleep(5000L);
+-        } catch (InterruptedException var2) {
++        } catch (final InterruptedException var2) {
+         }
+     }
+ 
+@@ -691,8 +694,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     @Override
+     public String getPluginNames() {
+         // CraftBukkit start - Whole method
+-        StringBuilder result = new StringBuilder();
+-        org.bukkit.plugin.Plugin[] plugins = this.server.getPluginManager().getPlugins();
++        final StringBuilder result = new StringBuilder();
++        final org.bukkit.plugin.Plugin[] plugins = this.server.getPluginManager().getPlugins();
+ 
+         result.append(this.server.getName());
+         result.append(" on Bukkit ");
+@@ -717,18 +720,18 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public String runCommand(String command) {
++    public String runCommand(final String command) {
+         // CraftBukkit start - fire RemoteServerCommandEvent
+         throw new UnsupportedOperationException("Not supported - remote source required.");
+     }
+ 
+-    public String runCommand(RconConsoleSource rconConsoleSource, String s) {
++    public String runCommand(final RconConsoleSource rconConsoleSource, final String s) {
+         if (s.isBlank()) return ""; // Paper - Do not process empty rcon commands
+ 
+         rconConsoleSource.prepareForCommand();
+         this.executeBlocking(() -> {
+-            CommandSourceStack wrapper = rconConsoleSource.createCommandSourceStack();
+-            org.bukkit.event.server.RemoteServerCommandEvent event = new org.bukkit.event.server.RemoteServerCommandEvent(rconConsoleSource.getBukkitSender(wrapper), s);
++            final CommandSourceStack wrapper = rconConsoleSource.createCommandSourceStack();
++            final org.bukkit.event.server.RemoteServerCommandEvent event = new org.bukkit.event.server.RemoteServerCommandEvent(rconConsoleSource.getBukkitSender(wrapper), s);
+             this.server.getPluginManager().callEvent(event);
+             if (event.isCancelled()) {
+                 return;
+@@ -739,7 +742,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         // CraftBukkit end
+     }
+ 
+-    public void storeUsingWhiteList(boolean isStoreUsingWhiteList) {
++    public void storeUsingWhiteList(final boolean isStoreUsingWhiteList) {
+         this.settings.update(properties -> properties.whiteList.update(this.registryAccess(), isStoreUsingWhiteList));
+     }
+ 
+@@ -751,12 +754,12 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public boolean isSingleplayerOwner(GameProfile profile) {
++    public boolean isSingleplayerOwner(final GameProfile profile) {
+         return false;
+     }
+ 
+     @Override
+-    public int getScaledTrackingDistance(int trackingDistance) {
++    public int getScaledTrackingDistance(final int trackingDistance) {
+         return this.getProperties().entityBroadcastRangePercentage * trackingDistance / 100;
+     }
+ 
+@@ -771,7 +774,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public TextFilter createTextFilterForPlayer(ServerPlayer player) {
++    public TextFilter createTextFilterForPlayer(final ServerPlayer player) {
+         return this.serverTextFilter != null ? this.serverTextFilter.createContext(player.getGameProfile()) : TextFilter.DUMMY;
+     }
+ 
+@@ -803,7 +806,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public void subscribeToDebugSample(ServerPlayer player, RemoteDebugSampleType sampleType) {
++    public void subscribeToDebugSample(final ServerPlayer player, final RemoteDebugSampleType sampleType) {
+         this.debugSampleSubscriptionTracker.subscribe(player, sampleType);
+     }
+ 
+@@ -822,19 +825,19 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         return this.settings.getProperties().pauseWhenEmptySeconds;
+     }
+ 
+-    private static ServerLinks createServerLinks(DedicatedServerSettings settings) {
+-        Optional<URI> optional = parseBugReportLink(settings.getProperties());
++    private static ServerLinks createServerLinks(final DedicatedServerSettings settings) {
++        final Optional<URI> optional = parseBugReportLink(settings.getProperties());
+         return optional.<ServerLinks>map(uri -> new ServerLinks(List.of(ServerLinks.KnownLinkType.BUG_REPORT.create(uri)))).orElse(ServerLinks.EMPTY);
+     }
+ 
+-    private static Optional<URI> parseBugReportLink(DedicatedServerProperties properties) {
+-        String string = properties.bugReportLink;
++    private static Optional<URI> parseBugReportLink(final DedicatedServerProperties properties) {
++        final String string = properties.bugReportLink;
+         if (string.isEmpty()) {
+             return Optional.empty();
+         } else {
+             try {
+                 return Optional.of(Util.parseAndValidateUntrustedUri(string));
+-            } catch (Exception var3) {
++            } catch (final Exception var3) {
+                 LOGGER.warn("Failed to parse bug link {}", string, var3);
+                 return Optional.empty();
+             }
+@@ -847,7 +850,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+     }
+ 
+     @Override
+-    public org.bukkit.command.CommandSender getBukkitSender(CommandSourceStack wrapper) {
++    public org.bukkit.command.CommandSender getBukkitSender(final CommandSourceStack wrapper) {
+         return this.console;
+     }
+     // CraftBukkit end
+diff --git a/net/minecraft/server/network/ServerConnectionListener.java b/net/minecraft/server/network/ServerConnectionListener.java
+index bd07e6a5aa1883786d789ea71711a0c0c0a95c26..ea2cc5ad802d05c093e5c978a4007a0c70fd45c6 100644
+--- a/net/minecraft/server/network/ServerConnectionListener.java
++++ b/net/minecraft/server/network/ServerConnectionListener.java
+@@ -59,13 +59,13 @@ public class ServerConnectionListener {
+     private final List<ChannelFuture> channels = Collections.synchronizedList(Lists.newArrayList());
+     final List<Connection> connections = Collections.synchronizedList(Lists.newArrayList());
+ 
+-    public ServerConnectionListener(MinecraftServer server) {
++    public ServerConnectionListener(final MinecraftServer server) {
+         this.server = server;
+         this.running = true;
+     }
+ 
+     // Paper start - prevent blocking on adding a new connection while the server is ticking
+-    private final java.util.Queue<Connection> pending = new java.util.concurrent.ConcurrentLinkedQueue<>();
++    public final java.util.Queue<Connection> pending = new java.util.concurrent.ConcurrentLinkedQueue<>(); // MultiPaper make public
+     private static final boolean disableFlushConsolidation = Boolean.getBoolean("Paper.disableFlushConsolidate"); // Paper - Optimize network
+ 
+     private final void addPending() {
+@@ -77,16 +77,16 @@ public class ServerConnectionListener {
+     }
+     // Paper end - prevent blocking on adding a new connection while the server is ticking
+ 
+-    public void startTcpServerListener(@Nullable InetAddress address, int port) throws IOException {
++    public void startTcpServerListener(@Nullable final InetAddress address, final int port) throws IOException {
+         // Paper start - Unix domain socket support
+         this.startTcpServerListener(new java.net.InetSocketAddress(address, port));
+     }
+ 
+-    public void startTcpServerListener(SocketAddress address) throws IOException {
++    public void startTcpServerListener(final SocketAddress address) throws IOException {
+         // Paper end - Unix domain socket support
+         synchronized (this.channels) {
+-            Class<? extends io.netty.channel.ServerChannel> clazz; // Paper - Unix domain socket support
+-            EventLoopGroup eventLoopGroup;
++            final Class<? extends io.netty.channel.ServerChannel> clazz; // Paper - Unix domain socket support
++            final EventLoopGroup eventLoopGroup;
+             if (Epoll.isAvailable() && this.server.isEpollEnabled()) {
+                 // Paper start - Unix domain socket support
+                 if (address instanceof io.netty.channel.unix.DomainSocketAddress) {
+@@ -120,21 +120,21 @@ public class ServerConnectionListener {
+                         .childHandler(
+                             new ChannelInitializer<Channel>() {
+                                 @Override
+-                                protected void initChannel(Channel channel) {
++                                protected void initChannel(final Channel channel) {
+                                     try {
+                                         channel.config().setOption(ChannelOption.TCP_NODELAY, true);
+-                                    } catch (ChannelException var5) {
++                                    } catch (final ChannelException var5) {
+                                     }
+ 
+                                     if (!disableFlushConsolidation) channel.pipeline().addFirst(new io.netty.handler.flush.FlushConsolidationHandler()); // Paper - Optimize network
+-                                    ChannelPipeline channelPipeline = channel.pipeline().addLast("timeout", new ReadTimeoutHandler(30));
++                                    final ChannelPipeline channelPipeline = channel.pipeline().addLast("timeout", new ReadTimeoutHandler(30));
+                                     if (ServerConnectionListener.this.server.repliesToStatus()) {
+                                         channelPipeline.addLast("legacy_query", new LegacyQueryHandler(ServerConnectionListener.this.getServer()));
+                                     }
+ 
+                                     Connection.configureSerialization(channelPipeline, PacketFlow.SERVERBOUND, false, null);
+-                                    int rateLimitPacketsPerSecond = ServerConnectionListener.this.server.getRateLimitPacketsPerSecond();
+-                                    Connection connection = (Connection)(rateLimitPacketsPerSecond > 0
++                                    final int rateLimitPacketsPerSecond = ServerConnectionListener.this.server.getRateLimitPacketsPerSecond();
++                                    final Connection connection = (Connection)(rateLimitPacketsPerSecond > 0
+                                         ? new RateKickingConnection(rateLimitPacketsPerSecond)
+                                         : new Connection(PacketFlow.SERVERBOUND));
+                                     // Paper start - Add support for Proxy Protocol
+@@ -142,15 +142,15 @@ public class ServerConnectionListener {
+                                         channel.pipeline().addAfter("timeout", "haproxy-decoder", new io.netty.handler.codec.haproxy.HAProxyMessageDecoder());
+                                         channel.pipeline().addAfter("haproxy-decoder", "haproxy-handler", new ChannelInboundHandlerAdapter() {
+                                             @Override
+-                                            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+-                                                if (msg instanceof io.netty.handler.codec.haproxy.HAProxyMessage message) {
++                                            public void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
++                                                if (msg instanceof final io.netty.handler.codec.haproxy.HAProxyMessage message) {
+                                                     if (message.command() == io.netty.handler.codec.haproxy.HAProxyCommand.PROXY) {
+-                                                        String realaddress = message.sourceAddress();
+-                                                        int realport = message.sourcePort();
++                                                        final String realaddress = message.sourceAddress();
++                                                        final int realport = message.sourcePort();
+ 
+-                                                        SocketAddress socketaddr = new java.net.InetSocketAddress(realaddress, realport);
++                                                        final SocketAddress socketaddr = new java.net.InetSocketAddress(realaddress, realport);
+ 
+-                                                        Connection connection = (Connection) channel.pipeline().get("packet_handler");
++                                                        final Connection connection = (Connection) channel.pipeline().get("packet_handler");
+                                                         connection.address = socketaddr;
+                                                         // Paper start - Add API to get player's proxy address
+                                                         final String proxyAddress = message.destinationAddress();
+@@ -178,7 +178,7 @@ public class ServerConnectionListener {
+                         )
+                         .group(eventLoopGroup)
+                         .localAddress(address) // Paper - Unix domain socket support
+-                        .option(ChannelOption.AUTO_READ, false) // CraftBukkit
++                        .option(ChannelOption.AUTO_READ, true) // CraftBukkit // MultiPaper - Use auto read
+                         .bind()
+                         .syncUninterruptibly()
+                 );
+@@ -188,7 +188,7 @@ public class ServerConnectionListener {
+     // CraftBukkit start
+     public void acceptConnections() {
+         synchronized (this.channels) {
+-            for (ChannelFuture future : this.channels) {
++            for (final ChannelFuture future : this.channels) {
+                 future.channel().config().setAutoRead(true);
+             }
+         }
+@@ -196,20 +196,20 @@ public class ServerConnectionListener {
+     // CraftBukkit end
+ 
+     public SocketAddress startMemoryChannel() {
+-        ChannelFuture channelFuture;
++        final ChannelFuture channelFuture;
+         synchronized (this.channels) {
+             channelFuture = new ServerBootstrap()
+                 .channel(LocalServerChannel.class)
+                 .childHandler(
+                     new ChannelInitializer<Channel>() {
+                         @Override
+-                        protected void initChannel(Channel channel) {
+-                            Connection connection = new Connection(PacketFlow.SERVERBOUND);
++                        protected void initChannel(final Channel channel) {
++                            final Connection connection = new Connection(PacketFlow.SERVERBOUND);
+                             connection.setListenerForServerboundHandshake(
+                                 new MemoryServerHandshakePacketListenerImpl(ServerConnectionListener.this.server, connection)
+                             );
+                             ServerConnectionListener.this.connections.add(connection);
+-                            ChannelPipeline channelPipeline = channel.pipeline();
++                            final ChannelPipeline channelPipeline = channel.pipeline();
+                             Connection.configureInMemoryPipeline(channelPipeline, PacketFlow.SERVERBOUND);
+                             connection.configurePacketHandler(channelPipeline);
+                         }
+@@ -228,10 +228,10 @@ public class ServerConnectionListener {
+     public void stop() {
+         this.running = false;
+ 
+-        for (ChannelFuture channelFuture : this.channels) {
++        for (final ChannelFuture channelFuture : this.channels) {
+             try {
+                 channelFuture.channel().close().sync();
+-            } catch (InterruptedException var4) {
++            } catch (final InterruptedException var4) {
+                 LOGGER.error("Interrupted whilst closing channel");
+             }
+         }
+@@ -246,21 +246,21 @@ public class ServerConnectionListener {
+                 Collections.shuffle(this.connections);
+             }
+             // Spigot end
+-            Iterator<Connection> iterator = this.connections.iterator();
++            final Iterator<Connection> iterator = this.connections.iterator();
+ 
+             while (iterator.hasNext()) {
+-                Connection connection = iterator.next();
++                final Connection connection = iterator.next();
+                 if (!connection.isConnecting()) {
+                     if (connection.isConnected()) {
+                         try {
+                             connection.tick();
+-                        } catch (Exception var7) {
++                        } catch (final Exception var7) {
+                             if (connection.isMemoryConnection()) {
+                                 throw new ReportedException(CrashReport.forThrowable(var7, "Ticking memory connection"));
+                             }
+ 
+                             LOGGER.warn("Failed to handle packet for {}", connection.getLoggableAddress(this.server.logIPs()), var7);
+-                            Component component = Component.literal("Internal server error");
++                            final Component component = Component.literal("Internal server error");
+                             connection.send(new ClientboundDisconnectPacket(component), PacketSendListener.thenRun(() -> connection.disconnect(component)));
+                             connection.setReadOnly();
+                         }
+@@ -288,24 +288,24 @@ public class ServerConnectionListener {
+         private final int jitter;
+         private final List<ServerConnectionListener.LatencySimulator.DelayedMessage> queuedMessages = Lists.newArrayList();
+ 
+-        public LatencySimulator(int delay, int jitter) {
++        public LatencySimulator(final int delay, final int jitter) {
+             this.delay = delay;
+             this.jitter = jitter;
+         }
+ 
+         @Override
+-        public void channelRead(ChannelHandlerContext ctx, Object msg) {
++        public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+             this.delayDownstream(ctx, msg);
+         }
+ 
+-        private void delayDownstream(ChannelHandlerContext ctx, Object msg) {
+-            int i = this.delay + (int)(Math.random() * this.jitter);
++        private void delayDownstream(final ChannelHandlerContext ctx, final Object msg) {
++            final int i = this.delay + (int)(Math.random() * this.jitter);
+             this.queuedMessages.add(new ServerConnectionListener.LatencySimulator.DelayedMessage(ctx, msg));
+             TIMER.newTimeout(this::onTimeout, i, TimeUnit.MILLISECONDS);
+         }
+ 
+-        private void onTimeout(Timeout timeout) {
+-            ServerConnectionListener.LatencySimulator.DelayedMessage delayedMessage = this.queuedMessages.remove(0);
++        private void onTimeout(final Timeout timeout) {
++            final ServerConnectionListener.LatencySimulator.DelayedMessage delayedMessage = this.queuedMessages.remove(0);
+             delayedMessage.ctx.fireChannelRead(delayedMessage.msg);
+         }
+ 
+@@ -313,7 +313,7 @@ public class ServerConnectionListener {
+             public final ChannelHandlerContext ctx;
+             public final Object msg;
+ 
+-            public DelayedMessage(ChannelHandlerContext ctx, Object msg) {
++            public DelayedMessage(final ChannelHandlerContext ctx, final Object msg) {
+                 this.ctx = ctx;
+                 this.msg = msg;
+             }
+diff --git a/net/minecraft/server/network/ServerHandshakePacketListenerImpl.java b/net/minecraft/server/network/ServerHandshakePacketListenerImpl.java
+index 8054aad7f394db8257fc894d92a6993283b8dbd4..14fb7b3179d59e27e8604e0fa2c2ed857016f6d7 100644
+--- a/net/minecraft/server/network/ServerHandshakePacketListenerImpl.java
++++ b/net/minecraft/server/network/ServerHandshakePacketListenerImpl.java
+@@ -11,6 +11,8 @@ import net.minecraft.network.protocol.login.LoginProtocols;
+ import net.minecraft.network.protocol.status.ServerStatus;
+ import net.minecraft.network.protocol.status.StatusProtocols;
+ import net.minecraft.server.MinecraftServer;
++import puregero.multipaper.ExternalServerConnection;
++import puregero.multipaper.MultiPaper;
+ 
+ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketListener {
+     private static final Component IGNORE_STATUS_REASON = Component.translatable("disconnect.ignoring_status_request");
+@@ -28,20 +30,30 @@ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketL
+     private final Connection connection;
+ 
+ 
+-    public ServerHandshakePacketListenerImpl(MinecraftServer server, Connection connection) {
++    public ServerHandshakePacketListenerImpl(final MinecraftServer server, final Connection connection) {
+         this.server = server;
+         this.connection = connection;
+     }
+ 
+     @Override
+-    public void handleIntention(ClientIntentionPacket packet) {
++    public void handleIntention(final ClientIntentionPacket packet) {
++        // MultiPaper start - Check if this is a MultiPaper server
++        for (final String part : packet.hostName().split("\00")) {
++            if (part.equals(MultiPaper.getConnection().secret)) {
++                server.getConnection().pending.remove(connection);;
++                server.getConnection().getConnections().remove(connection);
++                new ExternalServerConnection(connection.channel);
++                return;
++            }
++        }
++        // MultiPaper end - Check if this is a MultiPaper server
+         this.connection.hostname = packet.hostName() + ":" + packet.port(); // CraftBukkit  - set hostname
+         switch (packet.intention()) {
+             case LOGIN:
+                 this.beginLogin(packet, false);
+                 break;
+             case STATUS:
+-                ServerStatus status = this.server.getStatus();
++                final ServerStatus status = this.server.getStatus();
+                 this.connection.setupOutboundProtocol(StatusProtocols.CLIENTBOUND);
+                 if (this.server.repliesToStatus() && status != null) {
+                     this.connection.setupInboundProtocol(StatusProtocols.SERVERBOUND, new ServerStatusPacketListenerImpl(status, this.connection));
+@@ -52,7 +64,7 @@ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketL
+             case TRANSFER:
+                 if (!this.server.acceptsTransfers()) {
+                     this.connection.setupOutboundProtocol(LoginProtocols.CLIENTBOUND);
+-                    Component component = Component.translatable("multiplayer.disconnect.transfers_disabled");
++                    final Component component = Component.translatable("multiplayer.disconnect.transfers_disabled");
+                     this.connection.send(new ClientboundLoginDisconnectPacket(component));
+                     this.connection.disconnect(component);
+                 } else {
+@@ -69,20 +81,20 @@ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketL
+         // Paper end
+     }
+ 
+-    private void beginLogin(ClientIntentionPacket packet, boolean transferred) {
++    private void beginLogin(ClientIntentionPacket packet, final boolean transferred) {
+         this.connection.setupOutboundProtocol(LoginProtocols.CLIENTBOUND);
+         // Paper start - Connection throttle
+         try {
+             final long connectionThrottle = this.server.server.getConnectionThrottle();
+             final boolean isUnixDomainSocket = this.connection.channel.localAddress() instanceof io.netty.channel.unix.DomainSocketAddress; // Paper - Unix domain socket support; the connection throttle is useless when you have a Unix domain socket
+-            if (connectionThrottle > 0 && !isUnixDomainSocket && this.connection.getRemoteAddress() instanceof java.net.InetSocketAddress socketAddress && !socketAddress.isUnresolved() && !socketAddress.getAddress().isLoopbackAddress()) {
+-                long currentTime = System.currentTimeMillis();
+-                java.net.InetAddress address = socketAddress.getAddress();
++            if (connectionThrottle > 0 && !isUnixDomainSocket && this.connection.getRemoteAddress() instanceof final java.net.InetSocketAddress socketAddress && !socketAddress.isUnresolved() && !socketAddress.getAddress().isLoopbackAddress()) {
++                final long currentTime = System.currentTimeMillis();
++                final java.net.InetAddress address = socketAddress.getAddress();
+ 
+                 synchronized (ServerHandshakePacketListenerImpl.throttleTracker) {
+                     if (ServerHandshakePacketListenerImpl.throttleTracker.containsKey(address) && currentTime - ServerHandshakePacketListenerImpl.throttleTracker.get(address) < connectionThrottle) {
+                         ServerHandshakePacketListenerImpl.throttleTracker.put(address, currentTime);
+-                        Component chatmessage = io.papermc.paper.adventure.PaperAdventure.asVanilla(io.papermc.paper.configuration.GlobalConfiguration.get().messages.kick.connectionThrottle);
++                        final Component chatmessage = io.papermc.paper.adventure.PaperAdventure.asVanilla(io.papermc.paper.configuration.GlobalConfiguration.get().messages.kick.connectionThrottle);
+                         this.connection.send(new ClientboundLoginDisconnectPacket(chatmessage));
+                         this.connection.disconnect(chatmessage);
+                         return;
+@@ -98,35 +110,35 @@ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketL
+                     }
+                 }
+             }
+-        } catch (Throwable t) {
++        } catch (final Throwable t) {
+             org.apache.logging.log4j.LogManager.getLogger().debug("Failed to check connection throttle", t);
+         }
+         // Paper end - Connection throttle
+         if (packet.protocolVersion() != SharedConstants.getCurrentVersion().protocolVersion()) {
+-            net.kyori.adventure.text.Component adventureComponent; // Paper - Fix hex colors not working in some kick messages
++            final net.kyori.adventure.text.Component adventureComponent; // Paper - Fix hex colors not working in some kick messages
+             if (packet.protocolVersion() < SharedConstants.getCurrentVersion().protocolVersion()) { // Spigot - SPIGOT-7546: Handle version check correctly for outdated client message
+                 adventureComponent = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(java.text.MessageFormat.format(org.spigotmc.SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().name())); // Spigot // Paper - Fix hex colors not working in some kick messages
+             } else {
+                 adventureComponent = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(java.text.MessageFormat.format(org.spigotmc.SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().name())); // Spigot // Paper - Fix hex colors not working in some kick messages
+             }
+-            Component component = io.papermc.paper.adventure.PaperAdventure.asVanilla(adventureComponent); // Paper - Fix hex colors not working in some kick messages
++            final Component component = io.papermc.paper.adventure.PaperAdventure.asVanilla(adventureComponent); // Paper - Fix hex colors not working in some kick messages
+ 
+             this.connection.send(new ClientboundLoginDisconnectPacket(component));
+             this.connection.disconnect(component);
+         } else {
+             this.connection.setupInboundProtocol(LoginProtocols.SERVERBOUND, new ServerLoginPacketListenerImpl(this.server, this.connection, transferred));
+             // Paper start - PlayerHandshakeEvent
+-            boolean proxyLogicEnabled = org.spigotmc.SpigotConfig.bungee;
++            final boolean proxyLogicEnabled = org.spigotmc.SpigotConfig.bungee;
+             boolean handledByEvent = false;
+             // Try and handle the handshake through the event
+             if (com.destroystokyo.paper.event.player.PlayerHandshakeEvent.getHandlerList().getRegisteredListeners().length != 0) { // Hello? Can you hear me?
+-                java.net.SocketAddress socketAddress = this.connection.address;
+-                String hostnameOfRemote = socketAddress instanceof java.net.InetSocketAddress ? ((java.net.InetSocketAddress) socketAddress).getHostString() : java.net.InetAddress.getLoopbackAddress().getHostAddress();
+-                com.destroystokyo.paper.event.player.PlayerHandshakeEvent event = new com.destroystokyo.paper.event.player.PlayerHandshakeEvent(packet.hostName(), hostnameOfRemote, !proxyLogicEnabled);
++                final java.net.SocketAddress socketAddress = this.connection.address;
++                final String hostnameOfRemote = socketAddress instanceof java.net.InetSocketAddress? ((java.net.InetSocketAddress) socketAddress).getHostString() : java.net.InetAddress.getLoopbackAddress().getHostAddress();
++                final com.destroystokyo.paper.event.player.PlayerHandshakeEvent event = new com.destroystokyo.paper.event.player.PlayerHandshakeEvent(packet.hostName(), hostnameOfRemote, !proxyLogicEnabled);
+                 if (event.callEvent()) {
+                     // If we've failed somehow, let the client know so and go no further.
+                     if (event.isFailed()) {
+-                        Component message = io.papermc.paper.adventure.PaperAdventure.asVanilla(event.failMessage());
++                        final Component message = io.papermc.paper.adventure.PaperAdventure.asVanilla(event.failMessage());
+                         this.connection.send(new ClientboundLoginDisconnectPacket(message));
+                         this.connection.disconnect(message);
+                         return;
+@@ -149,18 +161,18 @@ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketL
+             }
+             // Paper end
+             // Spigot start
+-            String[] split = packet.hostName().split("\00");
++            final String[] split = packet.hostName().split("\00");
+             if (!handledByEvent && proxyLogicEnabled) { // Paper
+                 // if (org.spigotmc.SpigotConfig.bungee) { // Paper - comment out, we check above!
+                 if ((split.length == 3 || split.length == 4) && (ServerHandshakePacketListenerImpl.BYPASS_HOSTCHECK || ServerHandshakePacketListenerImpl.HOST_PATTERN.matcher(split[1]).matches())) { // Paper - Add bypass host check
+                     // Paper start - Unix domain socket support
+-                    java.net.SocketAddress socketAddress = this.connection.getRemoteAddress();
++                    final java.net.SocketAddress socketAddress = this.connection.getRemoteAddress();
+                     this.connection.hostname = split[0];
+                     this.connection.address = new java.net.InetSocketAddress(split[1], socketAddress instanceof java.net.InetSocketAddress ? ((java.net.InetSocketAddress) socketAddress).getPort() : 0);
+                     // Paper end - Unix domain socket support
+                     this.connection.spoofedUUID = com.mojang.util.UndashedUuid.fromStringLenient( split[2] );
+                 } else {
+-                    Component message = Component.literal("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
++                    final Component message = Component.literal("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
+                     this.connection.send(new ClientboundLoginDisconnectPacket(message));
+                     this.connection.disconnect(message);
+                     return;
+@@ -169,7 +181,7 @@ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketL
+                     this.connection.spoofedProfile = ServerHandshakePacketListenerImpl.gson.fromJson(split[3], com.mojang.authlib.properties.Property[].class);
+                 }
+             } else if ((split.length == 3 || split.length == 4) && (ServerHandshakePacketListenerImpl.HOST_PATTERN.matcher(split[1]).matches())) {
+-                Component message = Component.literal("Unknown data in login hostname, did you forget to enable BungeeCord in spigot.yml?");
++                final Component message = Component.literal("Unknown data in login hostname, did you forget to enable BungeeCord in spigot.yml?");
+                 this.connection.send(new ClientboundLoginDisconnectPacket(message));
+                 this.connection.disconnect(message);
+             }
+@@ -178,7 +190,7 @@ public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketL
+     }
+ 
+     @Override
+-    public void onDisconnect(DisconnectionDetails details) {
++    public void onDisconnect(final DisconnectionDetails details) {
+     }
+ 
+     @Override

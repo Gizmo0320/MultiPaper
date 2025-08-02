@@ -1,0 +1,96 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gizmo0320 <gizmo0320@unleveledgaming.com>
+Date: Fri, 1 Aug 2025 13:57:30 -0500
+Subject: [PATCH] Add Multipaper Config File
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
+index 748bd9650da4a209743b7a5dde584b2e19c5a578..7190f260bb3191d9a4a1a708c29a1edf826d848e 100644
+--- a/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -24,9 +24,9 @@ public class Main {
+     }
+     // Paper end - Reset loggers after shutdown
+ 
+-    public static void main(String[] args) {
++    public static void main(final String[] args) {
+         if (System.getProperty("jdk.nio.maxCachedBufferSize") == null) System.setProperty("jdk.nio.maxCachedBufferSize", "262144"); // Paper - cap per-thread NIO cache size; https://www.evanjones.ca/java-bytebuffer-leak.html
+-        OptionParser parser = new OptionParser() {
++        final OptionParser parser = new OptionParser() {
+             {
+                 this.acceptsAll(asList("?", "help"), "Show the help");
+ 
+@@ -172,6 +172,14 @@ public class Main {
+                     .describedAs("Yml file");
+                 // Purpur end - Purpur config files
+ 
++                // MultiPaper start - Multipaper config files
++                this.acceptsAll(asList("multipaper", "multipaper-settings"), "File for multipaper settings")
++                        .withRequiredArg()
++                        .ofType(File.class)
++                        .defaultsTo(new File("multipaper.yml"))
++                        .describedAs("Yml file");
++                // MultiPaper end - Multipaper config files
++
+                 this.accepts("server-name", "Name of the server")
+                         .withRequiredArg()
+                         .ofType(String.class)
+@@ -184,31 +192,31 @@ public class Main {
+ 
+         try {
+             options = parser.parse(args);
+-        } catch (joptsimple.OptionException ex) {
++        } catch (final joptsimple.OptionException ex) {
+             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, ex.getLocalizedMessage());
+         }
+ 
+         if ((options == null) || (options.has("?"))) {
+             try {
+                 parser.printHelpOn(System.out);
+-            } catch (IOException ex) {
++            } catch (final IOException ex) {
+                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+             }
+         } else if (options.has("v")) {
+             System.out.println(CraftServer.class.getPackage().getImplementationVersion());
+         } else {
+             // Do you love Java using + and ! as string based identifiers? I sure do!
+-            String path = new File(".").getAbsolutePath();
++            final String path = new File(".").getAbsolutePath();
+             if (path.contains("!") || path.contains("+")) {
+                 System.err.println("Cannot run server in a directory with ! or + in the pathname. Please rename the affected folders and try again.");
+                 return;
+             }
+ 
+             // Paper start - Improve java version check
+-            boolean skip = Boolean.getBoolean("Paper.IgnoreJavaVersion");
+-            String javaVersionName = System.getProperty("java.version");
++            final boolean skip = Boolean.getBoolean("Paper.IgnoreJavaVersion");
++            final String javaVersionName = System.getProperty("java.version");
+             // J2SE SDK/JRE Version String Naming Convention
+-            boolean isPreRelease = javaVersionName.contains("-");
++            final boolean isPreRelease = javaVersionName.contains("-");
+             if (isPreRelease) {
+                 if (!skip) {
+                     System.err.println("Unsupported Java detected (" + javaVersionName + "). You are running an unsupported, non official, version. Only general availability versions of Java are supported. Please update your Java version. See https://docs.papermc.io/paper/faq#unsupported-java-detected-what-do-i-do for more information.");
+@@ -232,9 +240,9 @@ public class Main {
+                 }
+ 
+                 if (false && Main.class.getPackage().getImplementationVendor() != null && System.getProperty("IReallyKnowWhatIAmDoingISwear") == null) { // Purpur - Disable outdated build check
+-                    Date buildDate = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").parse(Main.class.getPackage().getImplementationVendor()); // Paper
++                    final Date buildDate = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").parse(Main.class.getPackage().getImplementationVendor()); // Paper
+ 
+-                    Calendar deadline = Calendar.getInstance();
++                    final Calendar deadline = Calendar.getInstance();
+                     deadline.add(Calendar.DAY_OF_YEAR, -14);
+                     if (buildDate.before(deadline.getTime())) {
+                         // Paper start - This is some stupid bullshit
+@@ -248,7 +256,7 @@ public class Main {
+                 System.setProperty("jdk.console", "java.base"); // Paper - revert default console provider back to java.base so we can have our own jline
+ 
+                 io.papermc.paper.PaperBootstrap.boot(options);
+-            } catch (Throwable t) {
++            } catch (final Throwable t) {
+                 t.printStackTrace();
+             }
+         }
